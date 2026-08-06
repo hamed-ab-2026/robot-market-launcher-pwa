@@ -2,37 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  html {
-    direction: rtl;
-  }
-
-  body {
-    @apply bg-surface text-slate-800 font-vazir antialiased;
-    /* Avoid the iOS bounce showing the browser chrome color behind the app */
-    overscroll-behavior-y: none;
-  }
-
-  /* Visible keyboard focus for accessibility, respected everywhere */
-  :focus-visible {
-    outline: 2px solid theme("colors.primary.DEFAULT");
-    outline-offset: 2px;
-    border-radius: 0.5rem;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-    }
-  }
+html,
+body,
+#root {
+  height: 100%;
 }
 
-@layer components {
-  .press-scale {
-    @apply transition-transform duration-150 active:scale-[0.97];
-  }
+body {
+  margin: 0;
+  font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  background-color: #f5f7fa;
+  /* Avoid iOS bounce/rubber-band revealing white edges in standalone mode */
+  overscroll-behavior-y: none;
+  transition: background-color 0.2s ease;
+}
+
+html[lang='en'] body {
+  font-family: 'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Keep tap highlight subtle and consistent with a native app feel */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Numeric/Latin content (URLs, code) should never be mirrored by RTL layout */
+[dir='ltr'] {
+  unicode-bidi: isolate;
 }

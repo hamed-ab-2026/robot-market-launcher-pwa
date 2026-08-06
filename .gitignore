@@ -1,6 +1,12 @@
-node_modules/
-.next/
-out/
-.env*.local
+node_modules
+dist
+dist-ssr
+*.local
 .DS_Store
-npm-debug.log*
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
