@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    direction: rtl;
+  }
+
+  body {
+    @apply bg-surface text-slate-800 font-vazir antialiased;
+    /* Avoid the iOS bounce showing the browser chrome color behind the app */
+    overscroll-behavior-y: none;
+  }
+
+  /* Visible keyboard focus for accessibility, respected everywhere */
+  :focus-visible {
+    outline: 2px solid theme("colors.primary.DEFAULT");
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  .press-scale {
+    @apply transition-transform duration-150 active:scale-[0.97];
+  }
+}
