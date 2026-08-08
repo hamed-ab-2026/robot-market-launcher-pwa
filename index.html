@@ -1,44 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
+<!-- dir/lang are set to Persian by default; src/i18n/index.js updates them at runtime -->
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Robot Market Launcher</title>
-    <meta name="description" content="Quick launcher for the Robot Market Website, Online Management Panel, and Offline Vending Machine Manager." />
-
-    <!-- Theme color -->
-    <meta name="theme-color" content="#00a693" />
-
-    <!-- Fonts: Vazirmatn (Persian) + Inter (Latin) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Standard favicon / icons -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
-    <link rel="shortcut icon" href="/icons/icon-192.png" />
-
-    <!-- Android / Chrome will read manifest injected by vite-plugin-pwa -->
-
-    <!-- iOS PWA support (Safari does not fully read the manifest) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#00A693" />
+    <!-- iOS-specific standalone hints (Android/desktop handled by the Web Manifest) -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="RM Launcher" />
-    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+    <meta name="apple-mobile-web-app-title" content="Robot Fleet" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
 
-    <!-- iOS splash screens (simple solid-color splash using the icon).
-         These cover the most common iPhone/iPad viewport sizes. -->
-    <link rel="apple-touch-startup-image" href="/icons/icon-512.png" />
+    <!-- Vazirmatn: a single typeface that renders Persian + Latin glyphs well -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
 
-    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Robot Fleet Manager</title>
   </head>
-  <body>
+  <body class="bg-surface-light dark:bg-surface-dark transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

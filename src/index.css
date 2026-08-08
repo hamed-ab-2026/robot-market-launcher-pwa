@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------------------- */
+/* EN: Small global layer for things that don't fit neatly as Tailwind   */
+/*     utility classes (custom scrollbar, base font). Keep this file     */
+/*     tiny — almost all styling should live as Tailwind classes on      */
+/*     elements themselves, per the project's "utility-first" approach.  */
+/* FA: یک لایه سراسری کوچک برای مواردی که به‌سختی در قالب کلاس‌های        */
+/*     تیلویند جا می‌شوند. این فایل باید کوچک بماند — تقریباً همه استایل‌ها */
+/*     باید مستقیماً به‌صورت کلاس تیلویند روی المان‌ها باشند.              */
+/* -------------------------------------------------------------------- */
+
 html,
 body,
 #root {
@@ -9,26 +19,17 @@ body,
 }
 
 body {
-  margin: 0;
-  font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  background-color: #f5f7fa;
-  /* Avoid iOS bounce/rubber-band revealing white edges in standalone mode */
-  overscroll-behavior-y: none;
-  transition: background-color 0.2s ease;
+  @apply font-sans antialiased;
 }
 
-html[lang='en'] body {
-  font-family: 'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+/* Thin, brand-colored scrollbar — purely cosmetic, safe to remove */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-
-/* Keep tap highlight subtle and consistent with a native app feel */
-* {
-  -webkit-tap-highlight-color: transparent;
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-300 dark:bg-brand-700 rounded-full;
 }
-
-/* Numeric/Latin content (URLs, code) should never be mirrored by RTL layout */
-[dir='ltr'] {
-  unicode-bidi: isolate;
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
 }

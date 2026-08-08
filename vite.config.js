@@ -1,87 +1,86 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
-// https://vitejs.dev/config/
+// -----------------------------------------------------------------------
+// EN: Vite configuration. The VitePWA plugin auto-generates the Service
+//     Worker + injects the manifest link, which is what makes
+//     `window.matchMedia('(display-mode: standalone)')` become true
+//     once the user installs the app (see src/hooks/useIsStandalone.js).
+//
+//     ROOT CAUSE of "opens in a browser tab despite having a manifest":
+//     by default VitePWA does NOT inject the manifest link or register
+//     a Service Worker during `vite dev` — it only does that in a
+//     production build. So testing installability against `npm run dev`
+//     will always fail silently, with no error, no matter how correct
+//     manifest.json is. `devOptions.enabled: true` below turns that on
+//     for local development too.
+// FA: تنظیمات Vite. پلاگین VitePWA به‌صورت خودکار Service Worker می‌سازد
+//     و لینک مانیفست را تزریق می‌کند. همین باعث می‌شود بعد از نصب اپ،
+//     حالت standalone فعال شود.
+//
+//     ریشه مشکل "باز شدن در تب مرورگر با وجود مانیفست": به‌صورت پیش‌فرض
+//     VitePWA لینک مانیفست یا Service Worker را در حالت `vite dev` تزریق
+//     نمی‌کند — فقط در build نهایی این کار را انجام می‌دهد. پس تست نصب
+//     روی npm run dev همیشه بدون خطا شکست می‌خورد. devOptions.enabled
+//     همین را برای توسعه محلی هم فعال می‌کند.
+// -----------------------------------------------------------------------
 export default defineConfig({
-  base: '/',
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: [
-        'icons/icon-192.png',
-        'icons/icon-512.png',
-        'icons/icon-180.png'
-      ],
+      registerType: "autoUpdate",
+      // Enables manifest injection + SW registration during `npm run dev`,
+      // not just `npm run build`. Without this, `npm run dev` can NEVER
+      // be installed as a PWA, which is the #1 cause of "why is this
+      // still opening in a browser tab" during local testing.
+      devOptions: {
+        enabled: true,
+        type: "module"
+      },
+      includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
       manifest: {
-        id: '/',
-        name: 'Robot Market Launcher',
-        short_name: 'RM Launcher',
-        description:
-          'دسترسی سریع به وب‌سایت روبات مارکت، پنل مدیریت آنلاین و مدیریت دستگاه آفلاین.',
-        lang: 'fa',
-        dir: 'rtl',
-        theme_color: '#00a693',
-        background_color: '#ffffff',
-        display: 'standalone',
-        display_override: ['standalone', 'minimal-ui'],
-        orientation: 'portrait-primary',
-        start_url: '/',
-        scope: '/',
+        id: "/", // stable app identity across updates — prevents browsers from treating an updated manifest as a "different" app
+        name: "Robot Fleet Manager",
+        short_name: "RobotFleet",
+        description: "Professional hardware management dashboard for robot fleets",
+        lang: "fa", // matches the app's actual default language (see src/i18n/index.js)
+        dir: "rtl",
+        theme_color: "#00A693",
+        background_color: "#f2fffd",
+        // Strict standalone: no address bar, no browser chrome. "standalone"
+        // (rather than "minimal-ui" or "browser") is what makes
+        // `matchMedia('(display-mode: standalone)')` resolve to true.
+        display: "standalone",
+        display_override: ["standalone"], // hard-blocks any browser fallback to a less strict mode
+        orientation: "portrait-primary",
+        start_url: "/",
+        scope: "/", // every URL under "/" is considered part of the installed app's boundary
         icons: [
-          { src: '/icons/icon-72.png', sizes: '72x72', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-96.png', sizes: '96x96', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-128.png', sizes: '128x128', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-144.png', sizes: '144x144', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-152.png', sizes: '152x152', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-384.png', sizes: '384x384', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/icons/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          { src: "icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
         ]
       },
       workbox: {
-        // Precache the app shell for full offline support
-        globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
-        navigateFallback: '/index.html',
-        runtimeCaching: [
-          {
-            // Cache-first for our own generated icons/images
-            urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'rm-images',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 }
-            }
-          }
-        ]
-      },
-      devOptions: {
-        // Enable SW in `npm run dev` for easier testing of install/offline behavior
-        enabled: true,
-        type: 'module'
+        // Cache the app shell so the InstallGate/Splash still work offline.
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        // --- Cache-invalidation strategy for an already-installed PWA ---
+        // cleanupOutdatedCaches: deletes old precache versions as soon as
+        //   a new Service Worker activates, instead of leaving stale
+        //   manifest/asset caches sitting around indefinitely.
+        // clientsClaim + skipWaiting (paired with registerType:"autoUpdate"
+        //   above): the new Service Worker takes control of ALL open tabs
+        //   immediately on activation, instead of waiting for every tab
+        //   to be closed and reopened first.
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
       }
     })
   ],
-  build: {
-    chunkSizeWarningLimit: 700,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          antd: ['antd', '@ant-design/icons']
-        }
-      }
-    }
-  },
   server: {
-    host: true,
-    port: 5173
-  },
-  preview: {
-    host: true,
-    port: 4173
+    port: 5173,
+    host: true
   }
-})
+});

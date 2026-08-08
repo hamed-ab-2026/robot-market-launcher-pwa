@@ -1,113 +1,88 @@
-import { useEffect, useState } from 'react'
-import { ConfigProvider, Layout, theme as antdTheme } from 'antd'
-import faIR from 'antd/locale/fa_IR'
-import enUS from 'antd/locale/en_US'
-import { Routes, Route } from 'react-router-dom'
-import AppHeader from './components/AppHeader'
-import SettingsDrawer from './components/SettingsDrawer'
-import InstallPromptModal from './components/InstallPromptModal'
-import Home from './pages/Home'
-import About from './pages/About'
-import useInstallPrompt from './hooks/useInstallPrompt'
-import useLanguage from './hooks/useLanguage'
-import useThemeMode from './hooks/useThemeMode'
-import { PRIMARY_COLOR } from './theme'
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { ConfigProvider, theme as antdTheme } from "antd";
+import { useTranslation } from "react-i18next";
 
-const { Content } = Layout
+import AppRouter from "./routes/AppRouter";
+import InstallGate from "./pages/InstallGate";
+import { useDarkMode } from "./hooks/useDarkMode";
+import { useIsStandalone } from "./hooks/useIsStandalone";
+import { lockSession } from "./store/slices/authSlice";
+
+// -----------------------------------------------------------------------
+// EN: App.jsx is the composition root:
+//       1. Keeps the <html> `dark` class in sync (useDarkMode)
+//       2. Checks PWA standalone mode via useIsStandalone(), and — this
+//          is the fix — gates rendering RIGHT HERE: if the app is not
+//          running standalone, App.jsx renders <InstallGate/> directly
+//          and never mounts <AppRouter/> at all. The router, splash
+//          screen, and every protected page simply don't exist yet for
+//          a browser-tab visitor; there's no route to fall back into.
+//       3. Feeds Ant Design's ConfigProvider our brand color + RTL
+//          direction + dark algorithm, so EVERY AntD component (Table,
+//          Modal, Drawer, etc.) automatically matches our Tailwind theme
+//          without per-component overrides.
+//       4. Locks the session again if the tab was hidden for a while —
+//          a lightweight "auto-lock" security behavior for a hardware
+//          control panel.
+// FA: App.jsx ریشه ترکیب اپلیکیشن است:
+//       ۱. کلاس dark روی <html> را هماهنگ نگه می‌دارد
+//       ۲. حالت standalone را با useIsStandalone() بررسی می‌کند — و این
+//          همان اصلاح است: رندر شدن دقیقاً همین‌جا کنترل می‌شود: اگر اپ
+//          standalone نباشد، App.jsx مستقیماً InstallGate را رندر
+//          می‌کند و اصلاً AppRouter را mount نمی‌کند.
+//       ۳. رنگ برند + جهت RTL + الگوریتم تیره را به ConfigProvider
+//          آنت‌دیزاین می‌دهد.
+//       ۴. اگر تب برای مدتی مخفی بود، دوباره سشن را قفل می‌کند.
+// -----------------------------------------------------------------------
+
+const AUTO_LOCK_HIDDEN_MS = 2 * 60 * 1000; // re-lock after 2 minutes in background
 
 export default function App() {
-  const { lang, t, dir } = useLanguage()
-  const { isDark, mode } = useThemeMode()
+  const dispatch = useDispatch();
+  const { i18n } = useTranslation();
+  const darkMode = useDarkMode(); // side-effect hook: syncs <html class="dark">
+  const isStandalone = useIsStandalone(); // reactive: true only while running as an installed PWA
 
-  useEffect(() => {
-    document.documentElement.dir = dir
-    document.documentElement.lang = lang
-    document.documentElement.dataset.theme = mode
-    document.title = t('appName')
-  }, [dir, lang, mode, t])
+  const isUnlocked = useSelector((state) => state.auth.isUnlocked);
 
-  // One-time cleanup: an earlier version stored a user-selected accent
-  // color. The color palette was removed in favor of a single fixed brand
-  // color, so drop any stale value left over from that version.
+  // --- Auto-lock on prolonged background/inactivity ---
   useEffect(() => {
-    try {
-      localStorage.removeItem('app_primary_color')
-    } catch {
-      // ignore
+    let hiddenAt = null;
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+      } else if (document.visibilityState === "visible" && hiddenAt) {
+        const elapsed = Date.now() - hiddenAt;
+        if (elapsed > AUTO_LOCK_HIDDEN_MS && isUnlocked) {
+          dispatch(lockSession());
+        }
+        hiddenAt = null;
+      }
     }
-  }, [])
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [dispatch, isUnlocked]);
 
   return (
     <ConfigProvider
-      direction={dir}
-      locale={lang === 'fa' ? faIR : enUS}
+      direction={i18n.resolvedLanguage === "en" ? "ltr" : "rtl"}
       theme={{
-        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        algorithm: darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
         token: {
-          colorPrimary: PRIMARY_COLOR,
+          colorPrimary: "#00A693",
+          colorBgBase: darkMode ? "#0b1615" : "#f2fffd",
           borderRadius: 10,
-          fontFamily:
-            lang === 'fa'
-              ? "'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
-              : "'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif"
+          fontFamily: "Vazirmatn, Inter, system-ui, sans-serif"
         }
       }}
     >
-      <AppShell />
+      <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors duration-300">
+        {/* The actual gate: Install Guide for browser tabs, full app for standalone. */}
+        {isStandalone ? <AppRouter /> : <InstallGate />}
+      </div>
     </ConfigProvider>
-  )
-}
-
-function AppShell() {
-  const { token } = antdTheme.useToken()
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [settingsVersion, setSettingsVersion] = useState(0)
-  const [installing, setInstalling] = useState(false)
-
-  const { canInstall, showModal, alreadyInstalled, promptInstall, dismissForNow } = useInstallPrompt()
-
-  useEffect(() => {
-    document.body.style.background = token.colorBgLayout
-  }, [token.colorBgLayout])
-
-  const handleInstall = async () => {
-    setInstalling(true)
-    await promptInstall()
-    setInstalling(false)
-  }
-
-  return (
-    <Layout style={{ minHeight: '100vh', background: token.colorBgLayout }}>
-      <AppHeader
-        onOpenSettings={() => setSettingsOpen(true)}
-        canInstall={canInstall}
-        alreadyInstalled={alreadyInstalled}
-        installing={installing}
-        onInstallClick={handleInstall}
-      />
-      <Content>
-        <Routes>
-          <Route path="/" element={<Home settingsVersion={settingsVersion} />} />
-          <Route path="/about" element={<About />} />
-        </Routes>
-      </Content>
-
-      <SettingsDrawer
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        onSaved={() => setSettingsVersion((v) => v + 1)}
-        canInstall={canInstall}
-        alreadyInstalled={alreadyInstalled}
-        installing={installing}
-        onInstallClick={handleInstall}
-      />
-
-      <InstallPromptModal
-        open={showModal}
-        installing={installing}
-        onInstall={handleInstall}
-        onLater={dismissForNow}
-      />
-    </Layout>
-  )
+  );
 }

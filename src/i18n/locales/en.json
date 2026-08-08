@@ -9,6 +9,10 @@
   "install": {
     "title": "Installation Required",
     "description": "This management panel is only available as an installed app (PWA). Please install it on your device to continue.",
+    "installButton": "Install App",
+    "installing": "Installing...",
+    "installFailed": "Install didn't complete. Please use the guide below.",
+    "orManually": "Or install manually",
     "howTo": "How to install",
     "step1": "Tap your browser's menu button",
     "step2": "Choose \"Add to Home Screen\" or \"Install App\"",
