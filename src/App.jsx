@@ -1,13 +1,13 @@
-import React, { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { ConfigProvider, theme as antdTheme } from "antd";
-import { useTranslation } from "react-i18next";
+import React, {useEffect} from "react";
+import {useSelector, useDispatch} from "react-redux";
+import {ConfigProvider, theme as antdTheme} from "antd";
+import {useTranslation} from "react-i18next";
 
 import AppRouter from "./routes/AppRouter";
 import InstallGate from "./pages/InstallGate";
-import { useDarkMode } from "./hooks/useDarkMode";
-import { useIsStandalone } from "./hooks/useIsStandalone";
-import { lockSession } from "./store/slices/authSlice";
+import {useDarkMode} from "./hooks/useDarkMode";
+import {useIsStandalone} from "./hooks/useIsStandalone";
+import {lockSession} from "./store/slices/authSlice";
 
 // -----------------------------------------------------------------------
 // EN: App.jsx is the composition root:
@@ -39,50 +39,50 @@ import { lockSession } from "./store/slices/authSlice";
 const AUTO_LOCK_HIDDEN_MS = 2 * 60 * 1000; // re-lock after 2 minutes in background
 
 export default function App() {
-  const dispatch = useDispatch();
-  const { i18n } = useTranslation();
-  const darkMode = useDarkMode(); // side-effect hook: syncs <html class="dark">
-  const isStandalone = useIsStandalone(); // reactive: true only while running as an installed PWA
+    const dispatch = useDispatch();
+    const {i18n} = useTranslation();
+    const darkMode = useDarkMode(); // side-effect hook: syncs <html class="dark">
+    const isStandalone = useIsStandalone(); // reactive: true only while running as an installed PWA
 
-  const isUnlocked = useSelector((state) => state.auth.isUnlocked);
+    const isUnlocked = useSelector((state) => state.auth.isUnlocked);
 
-  // --- Auto-lock on prolonged background/inactivity ---
-  useEffect(() => {
-    let hiddenAt = null;
+    // --- Auto-lock on prolonged background/inactivity ---
+    useEffect(() => {
+        let hiddenAt = null;
 
-    function handleVisibilityChange() {
-      if (document.visibilityState === "hidden") {
-        hiddenAt = Date.now();
-      } else if (document.visibilityState === "visible" && hiddenAt) {
-        const elapsed = Date.now() - hiddenAt;
-        if (elapsed > AUTO_LOCK_HIDDEN_MS && isUnlocked) {
-          dispatch(lockSession());
+        function handleVisibilityChange() {
+            if (document.visibilityState === "hidden") {
+                hiddenAt = Date.now();
+            } else if (document.visibilityState === "visible" && hiddenAt) {
+                const elapsed = Date.now() - hiddenAt;
+                if (elapsed > AUTO_LOCK_HIDDEN_MS && isUnlocked) {
+                    dispatch(lockSession());
+                }
+                hiddenAt = null;
+            }
         }
-        hiddenAt = null;
-      }
-    }
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [dispatch, isUnlocked]);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, [dispatch, isUnlocked]);
 
-  return (
-    <ConfigProvider
-      direction={i18n.resolvedLanguage === "en" ? "ltr" : "rtl"}
-      theme={{
-        algorithm: darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
-        token: {
-          colorPrimary: "#00A693",
-          colorBgBase: darkMode ? "#0b1615" : "#f2fffd",
-          borderRadius: 10,
-          fontFamily: "Vazirmatn, Inter, system-ui, sans-serif"
-        }
-      }}
-    >
-      <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors duration-300">
-        {/* The actual gate: Install Guide for browser tabs, full app for standalone. */}
-        {isStandalone ? <AppRouter /> : <InstallGate />}
-      </div>
-    </ConfigProvider>
-  );
+    return (
+        <ConfigProvider
+            direction={i18n.resolvedLanguage === "en" ? "ltr" : "rtl"}
+            theme={{
+                algorithm: darkMode ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+                token: {
+                    colorPrimary: "#00A693",
+                    colorBgBase: darkMode ? "#0b1615" : "#f2fffd",
+                    borderRadius: 10,
+                    fontFamily: "Vazirmatn, Inter, system-ui, sans-serif"
+                }
+            }}
+        >
+            <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors duration-300">
+                {/* The actual gate: Install Guide for browser tabs, full app for standalone. */}
+                {isStandalone ? <AppRouter/> : <InstallGate/>}
+            </div>
+        </ConfigProvider>
+    );
 }

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, {useState, useEffect} from "react";
+import {Routes, Route, Navigate, useLocation} from "react-router-dom";
+import {useSelector} from "react-redux";
 
 import SplashScreen from "../pages/SplashScreen";
 import AuthPage from "../pages/AuthPage";
@@ -32,64 +32,64 @@ import Dashboard from "../pages/Dashboard";
 const SPLASH_DURATION_MS = 5000;
 
 /** EN: Redirects to the passcode screen if the session isn't unlocked yet. FA: اگر سشن باز نشده، به صفحه رمز عبور هدایت می‌کند. */
-function RequireUnlock({ children }) {
-  const isUnlocked = useSelector((state) => state.auth.isUnlocked);
-  const location = useLocation();
+function RequireUnlock({children}) {
+    const isUnlocked = useSelector((state) => state.auth.isUnlocked);
+    const location = useLocation();
 
-  if (!isUnlocked) {
-    return <Navigate to="/auth" replace state={{ from: location }} />;
-  }
-  return children;
+    if (!isUnlocked) {
+        return <Navigate to="/auth" replace state={{from: location}}/>;
+    }
+    return children;
 }
 
 export default function AppRouter() {
-  const [splashDone, setSplashDone] = useState(false);
+    const [splashDone, setSplashDone] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSplashDone(true), SPLASH_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => setSplashDone(true), SPLASH_DURATION_MS);
+        return () => clearTimeout(timer);
+    }, []);
 
-  if (!splashDone) {
-    return <SplashScreen />;
-  }
+    if (!splashDone) {
+        return <SplashScreen/>;
+    }
 
-  return (
-    <Routes>
-      {/* Passcode setup / unlock screen */}
-      <Route path="/auth" element={<AuthPage />} />
+    return (
+        <Routes>
+            {/* Passcode setup / unlock screen */}
+            <Route path="/auth" element={<AuthPage/>}/>
 
-      {/* Main Hub: choose Online (URL) vs Offline (IP) panel */}
-      <Route
-        path="/hub"
-        element={
-          <RequireUnlock>
-            <MainHub />
-          </RequireUnlock>
-        }
-      />
+            {/* Main Hub: choose Online (URL) vs Offline (IP) panel */}
+            <Route
+                path="/hub"
+                element={
+                    <RequireUnlock>
+                        <MainHub/>
+                    </RequireUnlock>
+                }
+            />
 
-      {/* Main management dashboard */}
-      <Route
-        path="/dashboard"
-        element={
-          <RequireUnlock>
-            <Dashboard />
-          </RequireUnlock>
-        }
-      />
+            {/* Main management dashboard */}
+            <Route
+                path="/dashboard"
+                element={
+                    <RequireUnlock>
+                        <Dashboard/>
+                    </RequireUnlock>
+                }
+            />
 
-      {/* Default: send everyone through the unlock check from "/" */}
-      <Route
-        path="/"
-        element={
-          <RequireUnlock>
-            <Navigate to="/hub" replace />
-          </RequireUnlock>
-        }
-      />
+            {/* Default: send everyone through the unlock check from "/" */}
+            <Route
+                path="/"
+                element={
+                    <RequireUnlock>
+                        <Navigate to="/hub" replace/>
+                    </RequireUnlock>
+                }
+            />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+            <Route path="*" element={<Navigate to="/" replace/>}/>
+        </Routes>
+    );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import {useState, useEffect} from "react";
 
 // -----------------------------------------------------------------------
 // EN: A single-purpose hook: is this page currently running in
@@ -64,13 +64,13 @@ import { useState, useEffect } from "react";
  *     جلوگیری کرد.
  */
 function detectStandalone() {
-  if (typeof window === "undefined") return false;
+    if (typeof window === "undefined") return false;
 
-  const matchesDisplayMode = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
-  const isIosStandalone = window.navigator?.standalone === true; // legacy Safari/iOS flag
-  const isAndroidTwa = document.referrer?.startsWith("android-app://") ?? false;
+    const matchesDisplayMode = window.matchMedia?.("(display-mode: standalone)").matches ?? false;
+    const isIosStandalone = window.navigator?.standalone === true; // legacy Safari/iOS flag
+    const isAndroidTwa = document.referrer?.startsWith("android-app://") ?? false;
 
-  return matchesDisplayMode || isIosStandalone || isAndroidTwa;
+    return matchesDisplayMode || isIosStandalone || isAndroidTwa;
 }
 
 /**
@@ -82,33 +82,34 @@ function detectStandalone() {
  * @returns {boolean} isStandalone
  */
 export function useIsStandalone() {
-  const [isStandalone, setIsStandalone] = useState(detectStandalone);
+    const [isStandalone, setIsStandalone] = useState(detectStandalone);
+    // const [isStandalone, setIsStandalone] = useState(true); // for test
 
-  useEffect(() => {
-    const mediaQueryList = window.matchMedia("(display-mode: standalone)");
+    useEffect(() => {
+        const mediaQueryList = window.matchMedia("(display-mode: standalone)");
 
-    // Re-run the FULL detection (not just the media query) on every change,
-    // so the iOS/Android fallbacks stay correct too if anything shifts.
-    const handleChange = () => setIsStandalone(detectStandalone());
+        // Re-run the FULL detection (not just the media query) on every change,
+        // so the iOS/Android fallbacks stay correct too if anything shifts.
+        const handleChange = () => setIsStandalone(detectStandalone());
 
-    // Safari < 14 / older engines expose addListener instead of the
-    // standard EventTarget addEventListener on MediaQueryList.
-    if (mediaQueryList.addEventListener) {
-      mediaQueryList.addEventListener("change", handleChange);
-    } else if (mediaQueryList.addListener) {
-      mediaQueryList.addListener(handleChange);
-    }
+        // Safari < 14 / older engines expose addListener instead of the
+        // standard EventTarget addEventListener on MediaQueryList.
+        if (mediaQueryList.addEventListener) {
+            mediaQueryList.addEventListener("change", handleChange);
+        } else if (mediaQueryList.addListener) {
+            mediaQueryList.addListener(handleChange);
+        }
 
-    return () => {
-      if (mediaQueryList.removeEventListener) {
-        mediaQueryList.removeEventListener("change", handleChange);
-      } else if (mediaQueryList.removeListener) {
-        mediaQueryList.removeListener(handleChange);
-      }
-    };
-  }, []);
+        return () => {
+            if (mediaQueryList.removeEventListener) {
+                mediaQueryList.removeEventListener("change", handleChange);
+            } else if (mediaQueryList.removeListener) {
+                mediaQueryList.removeListener(handleChange);
+            }
+        };
+    }, []);
 
-  return isStandalone;
+    return isStandalone;
 }
 
 export default useIsStandalone;
