@@ -1,0 +1,129 @@
+{
+  "app": {
+    "name": "Robot Fleet Manager",
+    "shortName": "RobotFleet"
+  },
+  "splash": {
+    "tagline": "Hardware Management Platform"
+  },
+  "install": {
+    "title": "Installation Required",
+    "description": "This management panel is only available as an installed app (PWA). Please install it on your device to continue.",
+    "howTo": "How to install",
+    "step1": "Tap your browser's menu button",
+    "step2": "Choose \"Add to Home Screen\" or \"Install App\"",
+    "step3": "Open the app from your home screen",
+    "retryButton": "Check installation again"
+  },
+  "auth": {
+    "setupTitle": "Set a 6-digit passcode",
+    "setupSubtitle": "Choose a passcode to protect access to this panel",
+    "confirmTitle": "Confirm passcode",
+    "unlockTitle": "Unlock",
+    "unlockSubtitle": "Enter your passcode",
+    "biometricPrompt": "or use Fingerprint / Face ID",
+    "biometricButton": "Use biometrics",
+    "mismatchError": "Passcodes don't match. Please try again.",
+    "wrongPasscode": "Incorrect passcode",
+    "attemptsRemaining": "{{count}} attempts remaining",
+    "lockedOut": "Too many failed attempts. Locked for {{seconds}}s.",
+    "clear": "Clear",
+    "delete": "Delete"
+  },
+  "hub": {
+    "welcomeTitle": "Welcome",
+    "welcomeSubtitle": "Choose how you'd like to connect to a device",
+    "onlinePanel": {
+      "title": "Online Panel",
+      "description": "Connect over the internet using a cloud server URL"
+    },
+    "offlinePanel": {
+      "title": "Offline Panel",
+      "description": "Connect directly by entering the device's IP address"
+    },
+    "urlPlaceholder": "https://device.example.com",
+    "ipPlaceholder": "192.168.1.100",
+    "connectButton": "Connect"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "devices": "Devices",
+    "customers": "Customers",
+    "reports": "Reports",
+    "messages": "Messages",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "header": {
+    "searchPlaceholder": "Search...",
+    "greeting": "Hi {{name}}",
+    "welcome": "Welcome to the Robot Market management panel",
+    "defaultUserName": "Ali Robati"
+  },
+  "dashboard": {
+    "title": "Management Dashboard",
+    "connectedDevice": "Connected device",
+    "stats": {
+      "onlineDevices": "Online devices",
+      "activeRobots": "Active robots",
+      "batteryAvg": "Avg. battery",
+      "alerts": "Alerts"
+    },
+    "salesChart": {
+      "title": "Sales chart",
+      "subtitle": "Sales trend over the last 30 days",
+      "period": "Last 30 days",
+      "toman": "Toman"
+    },
+    "activeDevices": {
+      "title": "Active devices",
+      "subtitle": "Status of connected devices",
+      "unit": "devices",
+      "online": "Online",
+      "offline": "Offline",
+      "pending": "Pending"
+    },
+    "recentActivity": {
+      "title": "Recent activity",
+      "subtitle": "Latest system activity",
+      "viewAll": "View all",
+      "types": {
+        "orderPlaced": "New order placed",
+        "deviceAdded": "New device added",
+        "paymentSuccess": "Payment succeeded",
+        "systemUpdate": "System updated"
+      },
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "deviceList": "Device list",
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "charging": "Charging",
+      "error": "Error"
+    },
+    "table": {
+      "name": "Name",
+      "ip": "IP address",
+      "battery": "Battery",
+      "status": "Status",
+      "lastSeen": "Last seen",
+      "actions": "Actions"
+    },
+    "refresh": "Refresh",
+    "mockBadge": "Mock data mode"
+  },
+  "common": {
+    "language": "Language",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}

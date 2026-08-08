@@ -1,0 +1,129 @@
+{
+  "app": {
+    "name": "مدیریت ناوگان ربات",
+    "shortName": "ربات‌فلیت"
+  },
+  "splash": {
+    "tagline": "پلتفرم مدیریت سخت‌افزار"
+  },
+  "install": {
+    "title": "نصب اپلیکیشن لازم است",
+    "description": "این پنل مدیریتی فقط به‌صورت اپلیکیشن نصب‌شده (PWA) در دسترس است. برای ادامه، ابتدا آن را روی دستگاه خود نصب کنید.",
+    "howTo": "راهنمای نصب",
+    "step1": "روی دکمه منوی مرورگر ضربه بزنید",
+    "step2": "گزینه «افزودن به صفحه اصلی» یا «Install App» را انتخاب کنید",
+    "step3": "اپلیکیشن را از صفحه اصلی خود باز کنید",
+    "retryButton": "بررسی مجدد نصب"
+  },
+  "auth": {
+    "setupTitle": "تعیین رمز عبور ۶ رقمی",
+    "setupSubtitle": "یک رمز عبور برای محافظت از دسترسی به پنل انتخاب کنید",
+    "confirmTitle": "تکرار رمز عبور",
+    "unlockTitle": "باز کردن قفل",
+    "unlockSubtitle": "رمز عبور خود را وارد کنید",
+    "biometricPrompt": "یا از اثر انگشت / فیس‌آیدی استفاده کنید",
+    "biometricButton": "ورود با بیومتریک",
+    "mismatchError": "رمزهای وارد شده مطابقت ندارند. دوباره تلاش کنید.",
+    "wrongPasscode": "رمز عبور اشتباه است",
+    "attemptsRemaining": "{{count}} تلاش باقی مانده",
+    "lockedOut": "به دلیل تلاش‌های ناموفق زیاد، قفل شده‌اید. {{seconds}} ثانیه صبر کنید.",
+    "clear": "پاک کردن",
+    "delete": "حذف"
+  },
+  "hub": {
+    "welcomeTitle": "خوش آمدید",
+    "welcomeSubtitle": "روش اتصال به دستگاه را انتخاب کنید",
+    "onlinePanel": {
+      "title": "پنل آنلاین",
+      "description": "اتصال از طریق آدرس اینترنتی (URL) به سرور ابری"
+    },
+    "offlinePanel": {
+      "title": "پنل آفلاین",
+      "description": "اتصال مستقیم با وارد کردن آدرس IP دستگاه"
+    },
+    "urlPlaceholder": "https://device.example.com",
+    "ipPlaceholder": "192.168.1.100",
+    "connectButton": "اتصال"
+  },
+  "sidebar": {
+    "dashboard": "داشبورد",
+    "orders": "سفارش‌ها",
+    "devices": "دستگاه‌ها",
+    "customers": "مشتریان",
+    "reports": "گزارش‌ها",
+    "messages": "پیام‌ها",
+    "settings": "تنظیمات",
+    "logout": "خروج"
+  },
+  "header": {
+    "searchPlaceholder": "جستجو...",
+    "greeting": "سلام {{name}}",
+    "welcome": "خوش آمدید به پنل مدیریت Robot Market",
+    "defaultUserName": "علی رباتی"
+  },
+  "dashboard": {
+    "title": "داشبورد مدیریت",
+    "connectedDevice": "دستگاه متصل",
+    "stats": {
+      "onlineDevices": "دستگاه‌های آنلاین",
+      "activeRobots": "ربات‌های فعال",
+      "batteryAvg": "میانگین باتری",
+      "alerts": "هشدارها"
+    },
+    "salesChart": {
+      "title": "نمودار فروش",
+      "subtitle": "روند فروش در ۳۰ روز گذشته",
+      "period": "۳۰ روز گذشته",
+      "toman": "تومان"
+    },
+    "activeDevices": {
+      "title": "دستگاه‌های فعال",
+      "subtitle": "وضعیت دستگاه‌های متصل",
+      "unit": "دستگاه",
+      "online": "آنلاین",
+      "offline": "آفلاین",
+      "pending": "در انتظار"
+    },
+    "recentActivity": {
+      "title": "فعالیت‌های اخیر",
+      "subtitle": "آخرین فعالیت‌های سیستم",
+      "viewAll": "مشاهده همه",
+      "types": {
+        "orderPlaced": "سفارش جدید ثبت شد",
+        "deviceAdded": "دستگاه جدید اضافه شد",
+        "paymentSuccess": "پرداخت موفق",
+        "systemUpdate": "به‌روزرسانی سیستم"
+      },
+      "today": "امروز",
+      "yesterday": "دیروز"
+    },
+    "deviceList": "لیست دستگاه‌ها",
+    "status": {
+      "online": "آنلاین",
+      "offline": "آفلاین",
+      "charging": "در حال شارژ",
+      "error": "خطا"
+    },
+    "table": {
+      "name": "نام",
+      "ip": "آدرس IP",
+      "battery": "باتری",
+      "status": "وضعیت",
+      "lastSeen": "آخرین اتصال",
+      "actions": "عملیات"
+    },
+    "refresh": "به‌روزرسانی",
+    "mockBadge": "حالت داده نمایشی"
+  },
+  "common": {
+    "language": "زبان",
+    "darkMode": "حالت تیره",
+    "lightMode": "حالت روشن",
+    "loading": "در حال بارگذاری...",
+    "error": "خطایی رخ داد",
+    "retry": "تلاش مجدد",
+    "cancel": "انصراف",
+    "confirm": "تأیید",
+    "back": "بازگشت"
+  }
+}
