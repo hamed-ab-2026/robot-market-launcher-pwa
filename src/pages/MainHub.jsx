@@ -3,7 +3,15 @@ import {useDispatch} from "react-redux";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {Input, Button, message} from "antd";
-import {CloudOutlined, ApiOutlined, ArrowRightOutlined, ArrowLeftOutlined} from "@ant-design/icons";
+import {
+    CloudOutlined,
+    ApiOutlined,
+    ArrowRightOutlined,
+    ArrowLeftOutlined,
+    CloseOutlined,
+    DesktopOutlined,
+    LinkOutlined,
+} from "@ant-design/icons";
 
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
@@ -30,6 +38,9 @@ export default function MainHub() {
 
     const [expandedCard, setExpandedCard] = useState(null); // "online" | "offline" | null
     const [addressValue, setAddressValue] = useState("");
+    const [showLocalPanel, setShowLocalPanel] = useState(false);
+
+    const localPanelUrl = "http://192.168.4.1";
 
     const isRtl = document.documentElement.dir === "rtl";
     const ArrowIcon = isRtl ? ArrowLeftOutlined : ArrowRightOutlined;
@@ -119,12 +130,53 @@ export default function MainHub() {
                     </HubCard>
 
 
-                    <Button
-                        type="primary"
-                        onClick={() => window.location.href = 'http://192.168.4.1'}
-                    >
-                        192.168.4.1
-                    </Button>
+                    <div
+                        className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Button
+                                type="primary"
+                                size="large"
+                                block
+                                className="bg-brand-500 hover:!bg-brand-600"
+                                icon={<DesktopOutlined/>}
+                                onClick={() => setShowLocalPanel(true)}
+                            >
+                                نمایش داخل برنامه
+                            </Button>
+                            <Button
+                                size="large"
+                                block
+                                icon={<LinkOutlined/>}
+                                onClick={() => window.location.assign(localPanelUrl)}
+                            >
+                                باز کردن مستقیم
+                            </Button>
+                        </div>
+
+                        {showLocalPanel && (
+                            <div
+                                className="mt-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
+                                <div
+                                    className="flex items-center justify-between gap-3 bg-slate-50 px-4 py-3 dark:bg-slate-900">
+                                    <span className="truncate text-sm text-slate-600 dark:text-slate-300" dir="ltr">
+                                        {localPanelUrl}
+                                    </span>
+                                    <Button
+                                        type="text"
+                                        shape="circle"
+                                        icon={<CloseOutlined/>}
+                                        aria-label="بستن پنل"
+                                        onClick={() => setShowLocalPanel(false)}
+                                    />
+                                </div>
+                                <iframe
+                                    src={localPanelUrl}
+                                    title="پنل محلی ربات"
+                                    className="h-[65vh] min-h-[420px] w-full bg-white"
+                                />
+                            </div>
+                        )}
+                    </div>
 
                 </div>
             </main>

@@ -2,23 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4ec6b313-edf9-4661-80e8-276f70b1c5ea" name="Changes" comment="update">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/assets/index-Cxwtsw1l.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icons/icon-192.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/icons/icon-512.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/index.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/manifest.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/manifest.webmanifest" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/registerSW.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/sw.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/workbox-9c191d2f.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/auth/PasscodeDots.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/auth/PasscodeDots.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useIsStandalone.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useIsStandalone.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useWebAuthn.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useWebAuthn.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/MainHub.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/MainHub.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/routes/AppRouter.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/routes/AppRouter.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,7 +58,8 @@
       <option name="presentableId" value="Default" />
       <updated>1786177976403</updated>
       <workItem from="1786177978972" duration="5718000" />
-      <workItem from="1786185594145" duration="899000" />
+      <workItem from="1786185594145" duration="2524000" />
+      <workItem from="1786247727281" duration="2176000" />
     </task>
     <task id="LOCAL-00001" summary="update">
       <option name="closed" value="true" />
@@ -83,7 +69,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786178666420</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="update">
+      <option name="closed" value="true" />
+      <created>1786187261671</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1786187261671</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
