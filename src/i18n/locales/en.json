@@ -37,87 +37,71 @@
   "hub": {
     "welcomeTitle": "Welcome",
     "welcomeSubtitle": "Choose how you'd like to connect to a device",
-    "onlinePanel": {
-      "title": "Online Panel",
-      "description": "Connect over the internet using a cloud server URL"
-    },
-    "offlinePanel": {
-      "title": "Offline Panel",
-      "description": "Connect directly by entering the device's IP address"
-    },
     "urlPlaceholder": "https://device.example.com",
     "ipPlaceholder": "192.168.1.100",
-    "connectButton": "Connect"
-  },
-  "sidebar": {
-    "dashboard": "Dashboard",
-    "orders": "Orders",
-    "devices": "Devices",
-    "customers": "Customers",
-    "reports": "Reports",
-    "messages": "Messages",
-    "settings": "Settings",
-    "logout": "Log out"
-  },
-  "header": {
-    "searchPlaceholder": "Search...",
-    "greeting": "Hi {{name}}",
-    "welcome": "Welcome to the Robot Market management panel",
-    "defaultUserName": "Ali Robati"
-  },
-  "dashboard": {
-    "title": "Management Dashboard",
-    "connectedDevice": "Connected device",
-    "stats": {
-      "onlineDevices": "Online devices",
-      "activeRobots": "Active robots",
-      "batteryAvg": "Avg. battery",
-      "alerts": "Alerts"
+    "connectButton": "Connect",
+    "title": "Robot device center",
+    "onlineStatus": "Online",
+    "receiveBaseInfo": "Receive base information",
+    "deviceList": "Offline devices",
+    "deviceListDescription": "Manage local robots and open their control panels",
+    "addDevice": "Add device",
+    "emptyDevices": "No devices have been added yet",
+    "onlinePanel": {
+      "title": "Online panel",
+      "description": "Sign in to the cloud management panel",
+      "button": "Sign in"
     },
-    "salesChart": {
-      "title": "Sales chart",
-      "subtitle": "Sales trend over the last 30 days",
-      "period": "Last 30 days",
-      "toman": "Toman"
-    },
-    "activeDevices": {
-      "title": "Active devices",
-      "subtitle": "Status of connected devices",
-      "unit": "devices",
-      "online": "Online",
-      "offline": "Offline",
-      "pending": "Pending"
-    },
-    "recentActivity": {
-      "title": "Recent activity",
-      "subtitle": "Latest system activity",
-      "viewAll": "View all",
-      "types": {
-        "orderPlaced": "New order placed",
-        "deviceAdded": "New device added",
-        "paymentSuccess": "Payment succeeded",
-        "systemUpdate": "System updated"
-      },
-      "today": "Today",
-      "yesterday": "Yesterday"
-    },
-    "deviceList": "Device list",
-    "status": {
-      "online": "Online",
-      "offline": "Offline",
-      "charging": "Charging",
-      "error": "Error"
+    "offlinePanel": {
+      "title": "Offline panel",
+      "description": "Connect through DHCP hostname or a static IP address",
+      "button": "Add"
     },
     "table": {
-      "name": "Name",
-      "ip": "IP address",
-      "battery": "Battery",
-      "status": "Status",
-      "lastSeen": "Last seen",
+      "device": "Device",
+      "serial": "Serial / plate",
+      "connection": "Connection",
       "actions": "Actions"
     },
-    "refresh": "Refresh",
-    "mockBadge": "Mock data mode"
+    "actions": {
+      "iframe": "Open inside the app",
+      "direct": "Open directly",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this device?"
+    },
+    "fields": {
+      "username": "Username",
+      "password": "Password",
+      "deviceName": "Device name",
+      "serial": "Serial number",
+      "ipAddress": "IP address",
+      "deviceType": "Device type"
+    },
+    "onlineModal": {
+      "title": "Online panel credentials",
+      "submit": "Save and sign in",
+      "secureHint": "The password is encrypted with AES-GCM before local storage."
+    },
+    "deviceForm": {
+      "addTitle": "Add device",
+      "editTitle": "Edit device",
+      "connectionMode": "Connection method",
+      "dhcp": "DHCP / mDNS",
+      "staticIp": "Static IP",
+      "hostnamePreview": "Device address: http://{{serial}}.local"
+    },
+    "messages": {
+      "credentialsSaved": "Credentials saved securely",
+      "saveFailed": "Could not save the information",
+      "decryptFailed": "Could not decrypt the saved password",
+      "deviceAdded": "Device added",
+      "deviceUpdated": "Device updated",
+      "deviceDeleted": "Device deleted",
+      "connectionFailed": "Could not communicate with the device",
+      "noDevices": "Add a device first",
+      "baseInfoReceived": "Base information received"
+    }
   },
   "common": {
     "language": "Language",
@@ -128,6 +112,7 @@
     "retry": "Retry",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "close": "Close"
   }
 }

@@ -2,34 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* -------------------------------------------------------------------- */
-/* EN: Small global layer for things that don't fit neatly as Tailwind   */
-/*     utility classes (custom scrollbar, base font). Keep this file     */
-/*     tiny — almost all styling should live as Tailwind classes on      */
-/*     elements themselves, per the project's "utility-first" approach.  */
-/* FA: یک لایه سراسری کوچک برای مواردی که به‌سختی در قالب کلاس‌های        */
-/*     تیلویند جا می‌شوند. این فایل باید کوچک بماند — تقریباً همه استایل‌ها */
-/*     باید مستقیماً به‌صورت کلاس تیلویند روی المان‌ها باشند.              */
-/* -------------------------------------------------------------------- */
+@font-face {
+    font-family: "Vazirmatn";
+    src: url("/fonts/Vazirmatn-Regular.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
 
 html,
 body,
 #root {
-  height: 100%;
+    height: 100%;
 }
 
+
 body {
-  @apply font-sans antialiased;
+    @apply font-sans antialiased;
 }
 
 /* Thin, brand-colored scrollbar — purely cosmetic, safe to remove */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+    width: 8px;
+    height: 8px;
 }
+
 ::-webkit-scrollbar-thumb {
-  @apply bg-brand-300 dark:bg-brand-700 rounded-full;
+    @apply bg-brand-300 dark:bg-brand-700 rounded-full;
 }
+
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+    @apply bg-transparent;
 }

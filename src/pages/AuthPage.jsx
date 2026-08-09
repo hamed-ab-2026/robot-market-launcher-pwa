@@ -14,27 +14,31 @@ import { useWebAuthn, useWebAuthnAvailability } from "../hooks/useWebAuthn";
 
 const PASSCODE_LENGTH = 6;
 
-// -----------------------------------------------------------------------
-// EN: Matches the reference concept's exact visual order, top to bottom:
-//       mascot illustration -> title -> subtitle -> dot progress ->
-//       fingerprint button (+ label) -> numeric keypad -> text link
-//
-//     Two modes, decided automatically from Redux state:
-//       1. SETUP  (auth.hasPasscode === false) — first launch ever.
-//          Sub-steps: enter a new passcode -> confirm it -> hash + save.
-//       2. UNLOCK (auth.hasPasscode === true) — every launch after that.
-//          Enter the existing passcode, or tap the fingerprint button.
-//          Wrong attempts count down; after 5 failures the keypad locks
-//          for a cooldown period (see authSlice.js).
-//
-// FA: دقیقاً ترتیب بصری طرح مرجع را از بالا به پایین دنبال می‌کند:
-//       تصویرسازی ماسکات -> عنوان -> زیرعنوان -> نقطه‌های پیشرفت ->
-//       دکمه اثرانگشت (+ برچسب) -> کیبورد عددی -> لینک متنی
-//
-//     دو حالت که خودکار از state ردداکس تعیین می‌شود: راه‌اندازی اولیه
-//     و باز کردن قفل (مشابه نسخه قبلی).
-// -----------------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * صفحه ساخت یا ورود PIN است و بر اساس وجود هش ذخیره‌شده بین دو حالت Setup و Unlock جابه‌جا می‌شود.
+ * محدودیت تلاش، قفل زمانی و ورود بایومتریک نیز در همین صفحه هماهنگ می‌شوند.
+ */
 export default function AuthPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -49,7 +53,7 @@ export default function AuthPage() {
   const { authenticateBiometric, registerBiometric, hasBiometricRegistered } = useWebAuthn();
   const isBiometricAvailable = useWebAuthnAvailability();
 
-  // Setup flow has two internal steps: "create" then "confirm"
+
   const [setupStep, setSetupStep] = useState("create");
   const [firstEntry, setFirstEntry] = useState("");
 
@@ -57,7 +61,7 @@ export default function AuthPage() {
   const [isError, setIsError] = useState(false);
   const [remainingLockSeconds, setRemainingLockSeconds] = useState(0);
 
-  // --- Redirect onward once unlocked ---
+
   useEffect(() => {
     if (isUnlocked) {
       const redirectTo = location.state?.from?.pathname || "/hub";
@@ -65,7 +69,7 @@ export default function AuthPage() {
     }
   }, [isUnlocked, navigate, location.state]);
 
-  // --- Lockout countdown ticker ---
+
   useEffect(() => {
     if (!lockedUntil) {
       setRemainingLockSeconds(0);
@@ -79,6 +83,7 @@ export default function AuthPage() {
 
   const isLockedOut = remainingLockSeconds > 0;
 
+  /** پیام خطا و انیمیشن را فعال می‌کند و پس از یک مکث کوتاه ورودی PIN را برای تلاش بعدی پاک می‌کند. */
   const triggerError = useCallback((errorMessage) => {
     setIsError(true);
     message.error(errorMessage);
@@ -88,11 +93,15 @@ export default function AuthPage() {
     }, 400);
   }, []);
 
-  // --- Handles a completed 6-digit entry, branching by mode/step ---
+
+  /**
+   * PIN کامل‌شده را بر اساس حالت صفحه پردازش می‌کند.
+   * در Setup دو ورود را تطبیق می‌دهد و در Unlock صحت PIN را از Redux درخواست می‌کند.
+   */
   const handleComplete = useCallback(
     async (enteredValue) => {
       if (!hasPasscode) {
-        // ---------- SETUP MODE ----------
+
         if (setupStep === "create") {
           setFirstEntry(enteredValue);
           setSetupStep("confirm");
@@ -106,18 +115,18 @@ export default function AuthPage() {
           return;
         }
         await dispatch(setupPasscode(enteredValue));
-        // Best-effort biometric registration right after setup.
+
         if (isBiometricAvailable) {
           try {
             await registerBiometric();
           } catch {
-            /* user declined or platform authenticator unavailable — non-fatal */
+
           }
         }
         return;
       }
 
-      // ---------- UNLOCK MODE ----------
+
       try {
         await dispatch(unlockWithPasscode(enteredValue)).unwrap();
       } catch (errorCode) {
@@ -128,6 +137,7 @@ export default function AuthPage() {
     [hasPasscode, setupStep, firstEntry, dispatch, isBiometricAvailable, registerBiometric, t, triggerError]
   );
 
+  /** مقدار صفحه‌کلید را به‌روز می‌کند و با رسیدن به شش رقم، پردازش PIN را خودکار آغاز می‌کند. */
   const handleChange = useCallback(
     (nextValue) => {
       setValue(nextValue);
@@ -138,6 +148,7 @@ export default function AuthPage() {
     [handleComplete]
   );
 
+  /** درخواست اثرانگشت یا تشخیص چهره را اجرا و پس از موفقیت نشست Redux را باز می‌کند. */
   const handleBiometricTap = useCallback(async () => {
     try {
       const verified = await authenticateBiometric();
@@ -149,22 +160,22 @@ export default function AuthPage() {
     }
   }, [authenticateBiometric, dispatch, t]);
 
-  const title = !hasPasscode
-    ? setupStep === "create"
-      ? t("auth.setupTitle")
-      : t("auth.confirmTitle")
-    : t("auth.unlockTitle");
+  const title = !hasPasscode ?
+  setupStep === "create" ?
+  t("auth.setupTitle") :
+  t("auth.confirmTitle") :
+  t("auth.unlockTitle");
   const subtitle = !hasPasscode ? t("auth.setupSubtitle") : t("auth.unlockSubtitle");
   const showBiometricButton = hasPasscode && isBiometricAvailable && hasBiometricRegistered();
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-b from-surface-light to-brand-50 dark:from-surface-dark dark:to-slate-900">
-      {/* Decorative background wave, echoing the reference's soft mint backdrop */}
+      {}
       <svg
         className="pointer-events-none absolute inset-x-0 bottom-0 -z-0 opacity-60 dark:opacity-20"
         viewBox="0 0 400 200"
-        preserveAspectRatio="none"
-      >
+        preserveAspectRatio="none">
+
         <path d="M0,100 C100,180 300,20 400,100 L400,200 L0,200 Z" fill="#B9EDE4" />
       </svg>
 
@@ -185,24 +196,24 @@ export default function AuthPage() {
           <PasscodeDots filledCount={value.length} length={PASSCODE_LENGTH} isError={isError} />
         </div>
 
-        {hasPasscode && !isLockedOut && attemptsRemaining < 5 && (
-          <p className="mb-4 text-xs font-medium text-amber-500">
+        {hasPasscode && !isLockedOut && attemptsRemaining < 5 &&
+        <p className="mb-4 text-xs font-medium text-amber-500">
             {t("auth.attemptsRemaining", { count: attemptsRemaining })}
           </p>
-        )}
-        {isLockedOut && (
-          <p className="mb-4 text-xs font-medium text-red-500">
+        }
+        {isLockedOut &&
+        <p className="mb-4 text-xs font-medium text-red-500">
             {t("auth.lockedOut", { seconds: remainingLockSeconds })}
           </p>
-        )}
+        }
 
-        {showBiometricButton && (
-          <button
-            type="button"
-            onClick={handleBiometricTap}
-            disabled={isLockedOut}
-            className="mb-8 flex flex-col items-center gap-2 disabled:opacity-40"
-          >
+        {showBiometricButton &&
+        <button
+          type="button"
+          onClick={handleBiometricTap}
+          disabled={isLockedOut}
+          className="mb-8 flex flex-col items-center gap-2 disabled:opacity-40">
+
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-2xl text-brand-500 ring-2 ring-brand-100 dark:bg-brand-900/30 dark:ring-brand-800">
               <FingerprintIcon />
             </span>
@@ -210,7 +221,7 @@ export default function AuthPage() {
               {t("auth.biometricButton")}
             </span>
           </button>
-        )}
+        }
 
         <NumericKeypad
           value={value}
@@ -218,14 +229,15 @@ export default function AuthPage() {
           onSubmit={handleComplete}
           length={PASSCODE_LENGTH}
           isError={isError}
-          disabled={isLockedOut}
-        />
+          disabled={isLockedOut} />
+
       </main>
-    </div>
-  );
+    </div>);
+
 }
 
-/** EN: Inline fingerprint glyph (no icon-library entry matches the reference's ridged fingerprint mark closely enough). FA: نماد اثرانگشت به‌صورت inline. */
+
+/** آیکون سبک و مستقل اثرانگشت را به‌صورت SVG داخلی رندر می‌کند. */
 function FingerprintIcon() {
   return (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -234,8 +246,8 @@ function FingerprintIcon() {
         stroke="currentColor"
         strokeWidth="1.6"
         strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+        strokeLinejoin="round" />
+
+    </svg>);
+
 }

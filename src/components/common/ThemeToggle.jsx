@@ -4,15 +4,19 @@ import { SunOutlined, MoonOutlined } from "@ant-design/icons";
 import { toggleDarkMode } from "../../store/slices/uiSlice";
 import { useTranslation } from "react-i18next";
 
-// -----------------------------------------------------------------------
-// EN: A single toggle button reused across every screen's header. It only
-//     ever dispatches `toggleDarkMode` — the actual class-swapping side
-//     effect lives in hooks/useDarkMode.js so there's exactly one place
-//     that touches the DOM directly.
-// FA: یک دکمه تک برای تغییر حالت که در هدر همه صفحات استفاده می‌شود. فقط
-//     toggleDarkMode را دیسپچ می‌کند — منطق تغییر کلاس DOM در
-//     hooks/useDarkMode.js است تا فقط یک جا با DOM کار مستقیم داشته باشیم.
-// -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+/**
+ * دکمه تغییر تم روشن و تاریک را نمایش می‌دهد.
+ * آیکون و عنوان دکمه از وضعیت فعلی Redux ساخته می‌شوند و کلیک، Action تغییر تم را ارسال می‌کند.
+ */
 export default function ThemeToggle() {
   const dispatch = useDispatch();
   const { t } = useTranslation();
@@ -23,9 +27,9 @@ export default function ThemeToggle() {
       type="button"
       aria-label={darkMode ? t("common.lightMode") : t("common.darkMode")}
       onClick={() => dispatch(toggleDarkMode())}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-brand-400 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500"
-    >
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-brand-400 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500">
+
       {darkMode ? <SunOutlined /> : <MoonOutlined />}
-    </button>
-  );
+    </button>);
+
 }

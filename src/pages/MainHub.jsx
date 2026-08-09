@@ -1,214 +1,400 @@
-import React, {useState} from "react";
-import {useDispatch} from "react-redux";
-import {useNavigate} from "react-router-dom";
-import {useTranslation} from "react-i18next";
-import {Input, Button, message} from "antd";
+import React, { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    CloudOutlined,
-    ApiOutlined,
-    ArrowRightOutlined,
-    ArrowLeftOutlined,
-    CloseOutlined,
-    DesktopOutlined,
-    LinkOutlined,
-} from "@ant-design/icons";
+  Button,
+  Empty,
+  Form,
+  Input,
+  message,
+  Modal,
+  Popconfirm,
+  Radio,
+  Space,
+  Table,
+  Tag,
+  Tooltip } from
+"antd";
+import {
+  ApiOutlined,
+  CloudOutlined,
+  DeleteOutlined,
+  DesktopOutlined,
+  EditOutlined,
+  InfoCircleOutlined,
+  LinkOutlined,
+  SafetyCertificateOutlined,
+  WifiOutlined } from
+"@ant-design/icons";
 
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
-import {setConnection} from "../store/slices/deviceSlice";
+import RobotMascot from "../components/common/RobotMascot";
+import { buildDeviceBaseUrl, fetchDeviceInfo, loginToOnlinePanel } from "../services/deviceApi";
+import {
+  deleteDevice,
+  getEditableDevice,
+  getEditableOnlinePanel,
+  loadDevices,
+  saveDevice,
+  saveOnlinePanel } from
+"../services/hubStorage";
 
-// -----------------------------------------------------------------------
-// EN: The "Main Hub" step from the navigation flow. Presents two cards:
-//       - Online Panel: connect via a cloud URL
-//       - Offline Panel: connect via a local IP address
-//     Selecting either expands an inline input + connect button. On
-//     submit we save the connection info to Redux (deviceSlice) and
-//     navigate to /dashboard, which reads it to fetch data.
-// FA: مرحله "هاب اصلی" در جریان ناوبری. دو کارت نمایش می‌دهد:
-//       - پنل آنلاین: اتصال با URL ابری
-//       - پنل آفلاین: اتصال با آدرس IP محلی
-//     انتخاب هرکدام یک ورودی + دکمه اتصال باز می‌کند. با ثبت، اطلاعات
-//     اتصال در deviceSlice ذخیره شده و به داشبورد هدایت می‌شویم.
-// -----------------------------------------------------------------------
+const EMPTY_DEVICE = {
+  name: "",
+  serial: "",
+  type: "robot",
+  connectionMode: "dhcp",
+  ipAddress: "",
+  username: "",
+  password: ""
+};
 
+
+/**
+ * صفحه مرکزی مدیریت پنل ابری و دستگاه‌های محلی است.
+ * این کامپوننت مودال‌ها، جدول، ذخیره اطلاعات، رمزگشایی رمزها و دو روش باز کردن پنل دستگاه را هماهنگ می‌کند.
+ */
 export default function MainHub() {
-    const {t} = useTranslation();
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [devices, setDevices] = useState(loadDevices);
+  const [deviceModalOpen, setDeviceModalOpen] = useState(false);
+  const [onlineModalOpen, setOnlineModalOpen] = useState(false);
+  const [iframeDevice, setIframeDevice] = useState(null);
+  const [editingDevice, setEditingDevice] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [deviceForm] = Form.useForm();
+  const [onlineForm] = Form.useForm();
+  const connectionMode = Form.useWatch("connectionMode", deviceForm) || "dhcp";
+  const serialValue = Form.useWatch("serial", deviceForm) || "SN404023";
 
-    const [expandedCard, setExpandedCard] = useState(null); // "online" | "offline" | null
-    const [addressValue, setAddressValue] = useState("");
-    const [showLocalPanel, setShowLocalPanel] = useState(false);
 
-    const localPanelUrl = "http://192.168.4.1";
-
-    const isRtl = document.documentElement.dir === "rtl";
-    const ArrowIcon = isRtl ? ArrowLeftOutlined : ArrowRightOutlined;
-
-    function handleConnect(connectionType) {
-        const trimmed = addressValue.trim();
-        if (!trimmed) {
-            message.warning(t("common.error"));
-            return;
-        }
-        dispatch(setConnection({connectionType, address: trimmed}));
-        navigate("/dashboard");
+  /** اطلاعات قبلی پنل آنلاین را رمزگشایی و قبل از نمایش مودال داخل فرم قرار می‌دهد. */
+  async function openOnlineLogin() {
+    try {
+      onlineForm.setFieldsValue(await getEditableOnlinePanel());
+    } catch {
+      onlineForm.resetFields();
     }
-
-    return (
-        <div className="flex min-h-screen flex-col bg-surface-light dark:bg-surface-dark">
-            <header className="flex items-center justify-end gap-2 p-4">
-                <LanguageSwitcher/>
-                <ThemeToggle/>
-            </header>
-
-            <main className="mx-auto w-full max-w-2xl flex-1 px-6 pb-10">
-                <div className="mb-8 animate-fade-in text-center">
-                    <h1 className="text-xl font-bold text-slate-800 dark:text-white">{t("hub.welcomeTitle")}</h1>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("hub.welcomeSubtitle")}</p>
-                </div>
-
-                <div className="space-y-4">
-                    <HubCard
-                        icon={<CloudOutlined/>}
-                        title={t("hub.onlinePanel.title")}
-                        description={t("hub.onlinePanel.description")}
-                        isExpanded={expandedCard === "online"}
-                        onToggle={() => {
-                            setExpandedCard(expandedCard === "online" ? null : "online");
-                            setAddressValue("");
-                        }}
-                    >
-                        <Input
-                            size="large"
-                            placeholder={t("hub.urlPlaceholder")}
-                            value={addressValue}
-                            onChange={(e) => setAddressValue(e.target.value)}
-                            onPressEnter={() => handleConnect("online")}
-                        />
-                        <Button
-                            type="primary"
-                            size="large"
-                            block
-                            className="mt-3 bg-brand-500 hover:!bg-brand-600"
-                            icon={<ArrowIcon/>}
-                            iconPosition="end"
-                            onClick={() => handleConnect("online")}
-                        >
-                            {t("hub.connectButton")}
-                        </Button>
-                    </HubCard>
-
-                    <HubCard
-                        icon={<ApiOutlined/>}
-                        title={t("hub.offlinePanel.title")}
-                        description={t("hub.offlinePanel.description")}
-                        isExpanded={expandedCard === "offline"}
-                        onToggle={() => {
-                            setExpandedCard(expandedCard === "offline" ? null : "offline");
-                            setAddressValue("");
-                        }}
-                    >
-                        <Input
-                            size="large"
-                            placeholder={t("hub.ipPlaceholder")}
-                            value={addressValue}
-                            onChange={(e) => setAddressValue(e.target.value)}
-                            onPressEnter={() => handleConnect("offline")}
-                        />
-                        <Button
-                            type="primary"
-                            size="large"
-                            block
-                            className="mt-3 bg-brand-500 hover:!bg-brand-600"
-                            icon={<ArrowIcon/>}
-                            iconPosition="end"
-                            onClick={() => handleConnect("offline")}
-                        >
-                            {t("hub.connectButton")}
-                        </Button>
-                    </HubCard>
+    setOnlineModalOpen(true);
+  }
 
 
-                    <div
-                        className="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <Button
-                                type="primary"
-                                size="large"
-                                block
-                                className="bg-brand-500 hover:!bg-brand-600"
-                                icon={<DesktopOutlined/>}
-                                onClick={() => setShowLocalPanel(true)}
-                            >
-                                نمایش داخل برنامه
-                            </Button>
-                            <Button
-                                size="large"
-                                block
-                                icon={<LinkOutlined/>}
-                                onClick={() => window.location.assign(localPanelUrl)}
-                            >
-                                باز کردن مستقیم
-                            </Button>
-                        </div>
+  /** فرم آنلاین را اعتبارسنجی، رمز را امن ذخیره و آداپتور موقت ورود ابری را اجرا می‌کند. */
+  async function handleOnlineLogin() {
+    const values = await onlineForm.validateFields();
+    setIsSaving(true);
+    try {
+      await saveOnlinePanel(values);
+      await loginToOnlinePanel(values);
+      message.success(t("hub.messages.credentialsSaved"));
+      setOnlineModalOpen(false);
+    } catch {
+      message.error(t("hub.messages.saveFailed"));
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
-                        {showLocalPanel && (
-                            <div
-                                className="mt-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
-                                <div
-                                    className="flex items-center justify-between gap-3 bg-slate-50 px-4 py-3 dark:bg-slate-900">
-                                    <span className="truncate text-sm text-slate-600 dark:text-slate-300" dir="ltr">
-                                        {localPanelUrl}
-                                    </span>
-                                    <Button
-                                        type="text"
-                                        shape="circle"
-                                        icon={<CloseOutlined/>}
-                                        aria-label="بستن پنل"
-                                        onClick={() => setShowLocalPanel(false)}
-                                    />
-                                </div>
-                                <iframe
-                                    src={localPanelUrl}
-                                    title="پنل محلی ربات"
-                                    className="h-[65vh] min-h-[420px] w-full bg-white"
-                                />
-                            </div>
-                        )}
-                    </div>
 
-                </div>
-            </main>
+  /** وضعیت و فرم را برای ساخت یک دستگاه تازه پاک‌سازی می‌کند و مودال را باز می‌کند. */
+  function openAddDevice() {
+    setEditingDevice(null);
+    deviceForm.setFieldsValue(EMPTY_DEVICE);
+    setDeviceModalOpen(true);
+  }
+
+
+  /** دستگاه انتخاب‌شده را رمزگشایی و همه فیلدهای آن را برای ویرایش در فرم بارگذاری می‌کند. */
+  async function openEditDevice(device) {
+    setEditingDevice(device);
+    try {
+      deviceForm.setFieldsValue(await getEditableDevice(device));
+      setDeviceModalOpen(true);
+    } catch {
+      message.error(t("hub.messages.decryptFailed"));
+    }
+  }
+
+
+  /**
+   * فرم دستگاه را بررسی، آدرس اتصال را آزمایش و رکورد ایجادشده یا ویرایش‌شده را ذخیره می‌کند.
+   * پس از موفقیت، state جدول دوباره از localStorage خوانده می‌شود تا UI با منبع داده هماهنگ بماند.
+   */
+  async function handleSaveDevice() {
+    const values = await deviceForm.validateFields();
+    setIsSaving(true);
+    try {
+      const candidate = { ...editingDevice, ...values };
+      const discoveredInfo = await fetchDeviceInfo(candidate);
+      await saveDevice({ ...candidate, ...discoveredInfo });
+      setDevices(loadDevices());
+      setDeviceModalOpen(false);
+      message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));
+    } catch {
+      message.error(t("hub.messages.connectionFailed"));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+
+  /** دستگاه تأییدشده را حذف و فهرست قابل مشاهده را از حافظه محلی بازخوانی می‌کند. */
+  function handleDeleteDevice(deviceId) {
+    deleteDevice(deviceId);
+    setDevices(loadDevices());
+    message.success(t("hub.messages.deviceDeleted"));
+  }
+
+
+  /** اطلاعات پایه همه دستگاه‌های ثبت‌شده را از آداپتور API دریافت و نتیجه عملیات را اعلام می‌کند. */
+  async function refreshBaseInformation() {
+    if (!devices.length) {
+      message.info(t("hub.messages.noDevices"));
+      return;
+    }
+    setIsRefreshing(true);
+    try {
+      await Promise.all(devices.map(fetchDeviceInfo));
+      message.success(t("hub.messages.baseInfoReceived"));
+    } catch {
+      message.error(t("hub.messages.connectionFailed"));
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
+  /** ستون‌های جدول را از ترجمه فعال می‌سازد و تا زمان تغییر زبان دوباره محاسبه نمی‌کند. */
+  const columns = useMemo(() => [
+  {
+    title: t("hub.table.device"),
+    dataIndex: "name",
+    key: "name",
+    render: (name, device) =>
+    <div>
+          <div className="font-semibold text-slate-800 dark:text-white">{name}</div>
+          <div className="mt-1 text-xs text-slate-400" dir="ltr">{buildDeviceBaseUrl(device)}</div>
         </div>
-    );
+
+  },
+  {
+    title: t("hub.table.serial"),
+    dataIndex: "serial",
+    key: "serial",
+    render: (serial) => <span dir="ltr">{serial}</span>
+  },
+  {
+    title: t("hub.table.connection"),
+    dataIndex: "connectionMode",
+    key: "connectionMode",
+    render: (mode) =>
+    <Tag color={mode === "dhcp" ? "cyan" : "geekblue"}>
+          {mode === "dhcp" ? t("hub.deviceForm.dhcp") : t("hub.deviceForm.staticIp")}
+        </Tag>
+
+  },
+  {
+    title: t("hub.table.actions"),
+    key: "actions",
+    width: 190,
+    render: (_, device) =>
+    <Space size="small" wrap>
+          <Tooltip title={t("hub.actions.iframe")}>
+            <Button type="text" icon={<DesktopOutlined />} onClick={() => setIframeDevice(device)} />
+          </Tooltip>
+          <Tooltip title={t("hub.actions.direct")}>
+            <Button type="text" icon={<LinkOutlined />} onClick={() => window.location.assign(buildDeviceBaseUrl(device))} />
+          </Tooltip>
+          <Tooltip title={t("hub.actions.edit")}>
+            <Button type="text" icon={<EditOutlined />} onClick={() => openEditDevice(device)} />
+          </Tooltip>
+          <Popconfirm
+        title={t("hub.actions.deleteConfirm")}
+        okText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => handleDeleteDevice(device.id)}>
+
+            <Tooltip title={t("hub.actions.delete")}>
+              <Button danger type="text" icon={<DeleteOutlined />} />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+
+  }],
+  [t]);
+
+  return (
+    <div className="min-h-screen bg-surface-light pb-10 dark:bg-surface-dark">
+      <header className="sticky top-0 z-20 border-b border-white/70 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+          <RobotMascot variant="mark" className="h-10 w-10 flex-none" />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-bold text-slate-800 dark:text-white">{t("hub.title")}</h1>
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-300">
+              <WifiOutlined />
+              {t("hub.onlineStatus")}
+            </div>
+          </div>
+          <Button
+            className="hidden sm:inline-flex"
+            icon={<InfoCircleOutlined />}
+            loading={isRefreshing}
+            onClick={refreshBaseInformation}>
+
+            {t("hub.receiveBaseInfo")}
+          </Button>
+          <LanguageSwitcher />
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
+        <Button
+          block
+          className="sm:hidden"
+          icon={<InfoCircleOutlined />}
+          loading={isRefreshing}
+          onClick={refreshBaseInformation}>
+
+          {t("hub.receiveBaseInfo")}
+        </Button>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <PanelCard
+            icon={<CloudOutlined />}
+            title={t("hub.onlinePanel.title")}
+            description={t("hub.onlinePanel.description")}
+            buttonText={t("hub.onlinePanel.button")}
+            onClick={openOnlineLogin} />
+
+          <PanelCard
+            icon={<ApiOutlined />}
+            title={t("hub.offlinePanel.title")}
+            description={t("hub.offlinePanel.description")}
+            buttonText={t("hub.addDevice")}
+            onClick={openAddDevice} />
+
+        </section>
+
+        <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 sm:p-5 dark:border-slate-800">
+            <div>
+              <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
+            </div>
+          </div>
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={devices}
+            pagination={false}
+            scroll={{ x: 720 }}
+            locale={{ emptyText: <Empty description={t("hub.emptyDevices")} /> }} />
+
+        </section>
+
+        {iframeDevice &&
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-4 dark:border-slate-700">
+              <div className="min-w-0">
+                <h2 className="truncate font-semibold text-slate-800 dark:text-white">{iframeDevice.name}</h2>
+                <p className="truncate text-xs text-slate-400" dir="ltr">{buildDeviceBaseUrl(iframeDevice)}</p>
+              </div>
+              <Button onClick={() => setIframeDevice(null)}>{t("common.close")}</Button>
+            </div>
+            <iframe
+            src={buildDeviceBaseUrl(iframeDevice)}
+            title={iframeDevice.name}
+            className="h-[65vh] min-h-[420px] w-full bg-white" />
+
+          </section>
+        }
+      </main>
+
+      <Modal
+        title={t("hub.onlineModal.title")}
+        open={onlineModalOpen}
+        confirmLoading={isSaving}
+        okText={t("hub.onlineModal.submit")}
+        cancelText={t("common.cancel")}
+        onOk={handleOnlineLogin}
+        onCancel={() => setOnlineModalOpen(false)}>
+
+        <div className="mb-5 rounded-2xl bg-brand-50 p-4 text-sm text-brand-800 dark:bg-brand-900/30 dark:text-brand-200">
+          <SafetyCertificateOutlined className="me-2" />
+          {t("hub.onlineModal.secureHint")}
+        </div>
+        <Form form={onlineForm} layout="vertical">
+          <Form.Item name="username" label={t("hub.fields.username")} rules={[{ required: true }]}>
+            <Input autoComplete="username" />
+          </Form.Item>
+          <Form.Item name="password" label={t("hub.fields.password")} rules={[{ required: true }]}>
+            <Input.Password autoComplete="current-password" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={t(editingDevice ? "hub.deviceForm.editTitle" : "hub.deviceForm.addTitle")}
+        open={deviceModalOpen}
+        confirmLoading={isSaving}
+        okText={t("common.confirm")}
+        cancelText={t("common.cancel")}
+        onOk={handleSaveDevice}
+        onCancel={() => setDeviceModalOpen(false)}
+        destroyOnClose>
+
+        <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
+          <Form.Item name="connectionMode" label={t("hub.deviceForm.connectionMode")}>
+            <Radio.Group buttonStyle="solid">
+              <Radio.Button value="dhcp">{t("hub.deviceForm.dhcp")}</Radio.Button>
+              <Radio.Button value="static">{t("hub.deviceForm.staticIp")}</Radio.Button>
+            </Radio.Group>
+          </Form.Item>
+          <Form.Item name="name" label={t("hub.fields.deviceName")} rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="serial"
+            label={t("hub.fields.serial")}
+            rules={[{ required: connectionMode === "dhcp" }]}
+            extra={connectionMode === "dhcp" ? t("hub.deviceForm.hostnamePreview", { serial: serialValue }) : undefined}>
+
+            <Input dir="ltr" placeholder="SN404023" />
+          </Form.Item>
+          {connectionMode === "static" &&
+          <Form.Item name="ipAddress" label={t("hub.fields.ipAddress")} rules={[{ required: true }]}>
+              <Input dir="ltr" placeholder="192.168.1.100" />
+            </Form.Item>
+          }
+          <Form.Item name="type" label={t("hub.fields.deviceType")}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="username" label={t("hub.fields.username")} rules={[{ required: true }]}>
+            <Input autoComplete="username" />
+          </Form.Item>
+          <Form.Item name="password" label={t("hub.fields.password")} rules={[{ required: true }]}>
+            <Input.Password autoComplete="new-password" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    </div>);
+
 }
 
-/** EN: A single expandable hub option card. FA: یک کارت گزینه قابل‌بازشدن در هاب. */
-function HubCard({icon, title, description, isExpanded, onToggle, children}) {
-    return (
-        <div
-            className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm shadow-slate-200/50 transition dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-            <button
-                type="button"
-                onClick={onToggle}
-                className="flex w-full items-center gap-4 p-5 text-start"
-            >
-                <div
-                    className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-                    {icon}
-                </div>
-                <div className="flex-1">
-                    <h3 className="font-semibold text-slate-800 dark:text-white">{title}</h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
-                </div>
-            </button>
 
-            {isExpanded && (
-                <div className="animate-fade-in border-t border-slate-100 p-5 dark:border-slate-700">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
+/** کارت معرفی مشترک پنل آنلاین و آفلاین را رندر می‌کند تا ساختار و ظاهر آن‌ها تکرار نشود. */
+function PanelCard({ icon, title, description, buttonText, onClick }) {
+  return (
+    <article className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-bold text-slate-800 dark:text-white">{title}</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
+      </div>
+      <Button type="primary" onClick={onClick}>{buttonText}</Button>
+    </article>);
+
 }

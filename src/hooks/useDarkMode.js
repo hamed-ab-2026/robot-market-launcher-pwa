@@ -1,17 +1,21 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 
-// -----------------------------------------------------------------------
-// EN: Tailwind's `darkMode: "class"` strategy looks for a `dark` class on
-//     <html>. This hook is the ONLY place that toggles that class, driven
-//     entirely by Redux's `ui.darkMode` value — so every card, sidebar,
-//     and page that uses `dark:` utility classes stays in sync
-//     automatically, with a single source of truth.
-// FA: استراتژی "class" تیلویند دنبال کلاس dark روی <html> می‌گردد. این
-//     هوک تنها جایی است که این کلاس را (بر اساس مقدار ui.darkMode در
-//     ردداکس) تغییر می‌دهد — بنابراین همه کارت‌ها و صفحات با کلاس‌های
-//     dark: به‌صورت خودکار و از یک منبع واحد هماهنگ می‌مانند.
-// -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * وضعیت Dark Mode را از Redux می‌خواند و کلاس dark را روی عنصر html تنظیم می‌کند.
+ * خروجی Hook همان وضعیت فعلی است تا کامپوننت والد بتواند تم Ant Design را نیز هماهنگ کند.
+ */
 export function useDarkMode() {
   const darkMode = useSelector((state) => state.ui.darkMode);
 

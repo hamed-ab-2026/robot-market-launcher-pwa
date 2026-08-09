@@ -37,87 +37,71 @@
   "hub": {
     "welcomeTitle": "خوش آمدید",
     "welcomeSubtitle": "روش اتصال به دستگاه را انتخاب کنید",
+    "urlPlaceholder": "https://device.example.com",
+    "ipPlaceholder": "192.168.1.100",
+    "connectButton": "اتصال",
+    "title": "مرکز مدیریت دستگاه‌های ربات",
+    "onlineStatus": "آنلاین",
+    "receiveBaseInfo": "دریافت اطلاعات پایه",
+    "deviceList": "دستگاه‌های آفلاین",
+    "deviceListDescription": "مدیریت ربات‌های محلی و ورود به پنل کنترل آن‌ها",
+    "addDevice": "افزودن دستگاه",
+    "emptyDevices": "هنوز دستگاهی اضافه نشده است",
     "onlinePanel": {
       "title": "پنل آنلاین",
-      "description": "اتصال از طریق آدرس اینترنتی (URL) به سرور ابری"
+      "description": "ورود به پنل مدیریت ابری",
+      "button": "ورود"
     },
     "offlinePanel": {
       "title": "پنل آفلاین",
-      "description": "اتصال مستقیم با وارد کردن آدرس IP دستگاه"
-    },
-    "urlPlaceholder": "https://device.example.com",
-    "ipPlaceholder": "192.168.1.100",
-    "connectButton": "اتصال"
-  },
-  "sidebar": {
-    "dashboard": "داشبورد",
-    "orders": "سفارش‌ها",
-    "devices": "دستگاه‌ها",
-    "customers": "مشتریان",
-    "reports": "گزارش‌ها",
-    "messages": "پیام‌ها",
-    "settings": "تنظیمات",
-    "logout": "خروج"
-  },
-  "header": {
-    "searchPlaceholder": "جستجو...",
-    "greeting": "سلام {{name}}",
-    "welcome": "خوش آمدید به پنل مدیریت Robot Market",
-    "defaultUserName": "علی رباتی"
-  },
-  "dashboard": {
-    "title": "داشبورد مدیریت",
-    "connectedDevice": "دستگاه متصل",
-    "stats": {
-      "onlineDevices": "دستگاه‌های آنلاین",
-      "activeRobots": "ربات‌های فعال",
-      "batteryAvg": "میانگین باتری",
-      "alerts": "هشدارها"
-    },
-    "salesChart": {
-      "title": "نمودار فروش",
-      "subtitle": "روند فروش در ۳۰ روز گذشته",
-      "period": "۳۰ روز گذشته",
-      "toman": "تومان"
-    },
-    "activeDevices": {
-      "title": "دستگاه‌های فعال",
-      "subtitle": "وضعیت دستگاه‌های متصل",
-      "unit": "دستگاه",
-      "online": "آنلاین",
-      "offline": "آفلاین",
-      "pending": "در انتظار"
-    },
-    "recentActivity": {
-      "title": "فعالیت‌های اخیر",
-      "subtitle": "آخرین فعالیت‌های سیستم",
-      "viewAll": "مشاهده همه",
-      "types": {
-        "orderPlaced": "سفارش جدید ثبت شد",
-        "deviceAdded": "دستگاه جدید اضافه شد",
-        "paymentSuccess": "پرداخت موفق",
-        "systemUpdate": "به‌روزرسانی سیستم"
-      },
-      "today": "امروز",
-      "yesterday": "دیروز"
-    },
-    "deviceList": "لیست دستگاه‌ها",
-    "status": {
-      "online": "آنلاین",
-      "offline": "آفلاین",
-      "charging": "در حال شارژ",
-      "error": "خطا"
+      "description": "اتصال با hostname در DHCP یا آدرس IP ثابت",
+      "button": "افزودن"
     },
     "table": {
-      "name": "نام",
-      "ip": "آدرس IP",
-      "battery": "باتری",
-      "status": "وضعیت",
-      "lastSeen": "آخرین اتصال",
+      "device": "دستگاه",
+      "serial": "سریال / پلاک",
+      "connection": "نوع اتصال",
       "actions": "عملیات"
     },
-    "refresh": "به‌روزرسانی",
-    "mockBadge": "حالت داده نمایشی"
+    "actions": {
+      "iframe": "نمایش داخل برنامه",
+      "direct": "باز کردن مستقیم",
+      "edit": "ویرایش",
+      "delete": "حذف",
+      "deleteConfirm": "این دستگاه حذف شود؟"
+    },
+    "fields": {
+      "username": "نام کاربری",
+      "password": "رمز عبور",
+      "deviceName": "نام دستگاه",
+      "serial": "شماره سریال",
+      "ipAddress": "آدرس IP",
+      "deviceType": "نوع دستگاه"
+    },
+    "onlineModal": {
+      "title": "اطلاعات ورود پنل آنلاین",
+      "submit": "ذخیره و ورود",
+      "secureHint": "رمز عبور پیش از ذخیره محلی با AES-GCM رمزنگاری می‌شود."
+    },
+    "deviceForm": {
+      "addTitle": "افزودن دستگاه",
+      "editTitle": "ویرایش دستگاه",
+      "connectionMode": "روش اتصال",
+      "dhcp": "DHCP / mDNS",
+      "staticIp": "IP ثابت",
+      "hostnamePreview": "آدرس دستگاه: http://{{serial}}.local"
+    },
+    "messages": {
+      "credentialsSaved": "اطلاعات ورود با امنیت ذخیره شد",
+      "saveFailed": "ذخیره اطلاعات انجام نشد",
+      "decryptFailed": "رمزگشایی رمز ذخیره‌شده انجام نشد",
+      "deviceAdded": "دستگاه اضافه شد",
+      "deviceUpdated": "دستگاه ویرایش شد",
+      "deviceDeleted": "دستگاه حذف شد",
+      "connectionFailed": "ارتباط با دستگاه برقرار نشد",
+      "noDevices": "ابتدا یک دستگاه اضافه کنید",
+      "baseInfoReceived": "اطلاعات پایه دریافت شد"
+    }
   },
   "common": {
     "language": "زبان",
@@ -128,6 +112,7 @@
     "retry": "تلاش مجدد",
     "cancel": "انصراف",
     "confirm": "تأیید",
-    "back": "بازگشت"
+    "back": "بازگشت",
+    "close": "بستن"
   }
 }

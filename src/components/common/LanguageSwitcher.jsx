@@ -5,17 +5,21 @@ import { GlobalOutlined } from "@ant-design/icons";
 import { setLanguage } from "../../store/slices/uiSlice";
 import { SUPPORTED_LANGUAGES } from "../../i18n";
 
-// -----------------------------------------------------------------------
-// EN: Small reusable switcher, used in the top bars of InstallGate, Auth,
-//     Hub, and the Dashboard header. Dispatches to Redux (uiSlice), which
-//     in turn calls i18n.changeLanguage() — see setLanguage reducer.
-// FA: سوییچر کوچک و قابل استفاده مجدد که در نوار بالای صفحات مختلف
-//     به‌کار می‌رود. با دیسپچ به ردداکس، i18n.changeLanguage نیز فراخوانی
-//     می‌شود.
-// -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
 
 const LANGUAGE_LABELS = { fa: "فارسی", en: "English" };
 
+/**
+ * فهرست زبان‌های پشتیبانی‌شده را به یک Dropdown تبدیل می‌کند.
+ * انتخاب کاربر از طریق Redux اعمال می‌شود تا ترجمه‌ها، جهت صفحه و مقدار ذخیره‌شده هم‌زمان تغییر کنند.
+ */
 export default function LanguageSwitcher() {
   const dispatch = useDispatch();
   const currentLanguage = useSelector((state) => state.ui.language);
@@ -30,11 +34,11 @@ export default function LanguageSwitcher() {
     <Dropdown menu={{ items, selectedKeys: [currentLanguage] }} trigger={["click"]}>
       <button
         type="button"
-        className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:border-brand-400 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500"
-      >
+        className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-600 transition hover:border-brand-400 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-brand-500">
+
         <GlobalOutlined />
         {LANGUAGE_LABELS[currentLanguage]}
       </button>
-    </Dropdown>
-  );
+    </Dropdown>);
+
 }

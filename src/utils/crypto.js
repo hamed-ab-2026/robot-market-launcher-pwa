@@ -1,66 +1,176 @@
-// -----------------------------------------------------------------------
-// EN: We NEVER store the raw 6-digit passcode. Instead we store its
-//     SHA-256 hash. Even though a 6-digit code is inherently low-entropy
-//     (only 1,000,000 combinations) and hashing alone won't stop a
-//     determined brute-force attacker, it still protects the passcode
-//     from a casual look at localStorage / DevTools, and matches the
-//     spec's requirement. Real production systems should also add a
-//     server-side rate limit or a hardware-backed secure enclave.
-// FA: ما هرگز رمز عبور ۶ رقمی خام را ذخیره نمی‌کنیم. به‌جای آن، هش
-//     SHA-256 آن را ذخیره می‌کنیم. اگرچه یک کد ۶ رقمی ذاتاً آنتروپی کمی
-//     دارد، هش کردن حداقل از دیدن مستقیم رمز در localStorage/DevTools
-//     جلوگیری می‌کند و نیازمندی این پروژه را برآورده می‌سازد.
-// -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
- * EN: Hashes a plain string using SHA-256 via the browser's native
- *     Web Crypto API (`crypto.subtle`). No external hashing library is
- *     needed — every modern browser (and every PWA-capable one) ships
- *     this API natively, over HTTPS or localhost.
- *
- * FA: یک رشته ساده را با استفاده از الگوریتم SHA-256 و API بومی مرورگر
- *     (crypto.subtle) هش می‌کند. نیازی به کتابخانه خارجی نیست چون همه
- *     مرورگرهای مدرن (که قابلیت PWA دارند) این API را به‌صورت داخلی دارند.
- *
- * @param {string} plainText - e.g. the 6-digit passcode "123456"
- * @returns {Promise<string>} hex-encoded hash, e.g. "8d969eef6ec..."
+ * از متن خام یک اثرانگشت SHA-256 می‌سازد و آن را به رشته هگزادسیمال تبدیل می‌کند.
+ * هش یک‌طرفه است؛ بنابراین برای بررسی PIN مناسب است اما نمی‌توان متن اولیه را از آن بازیابی کرد.
  */
 export async function sha256Hash(plainText) {
-  // Step 1 (EN): Convert the string into raw bytes (UTF-8).
-  // مرحله ۱ (FA): رشته را به بایت‌های خام (UTF-8) تبدیل می‌کنیم.
+
+
   const encoder = new TextEncoder();
   const dataBytes = encoder.encode(plainText);
 
-  // Step 2 (EN): Ask the browser to compute the SHA-256 digest.
-  //              This returns an ArrayBuffer, not a readable string yet.
-  // مرحله ۲ (FA): از مرورگر می‌خواهیم دایجست SHA-256 را محاسبه کند.
-  //              خروجی یک ArrayBuffer است، هنوز رشته قابل‌خواندن نیست.
+
+
+
+
   const hashBuffer = await crypto.subtle.digest("SHA-256", dataBytes);
 
-  // Step 3 (EN): Convert the ArrayBuffer into a regular array of bytes,
-  //              then map each byte to a 2-character hex string, and
-  //              join them into the final hash string.
-  // مرحله ۳ (FA): ArrayBuffer را به آرایه‌ای از بایت‌ها تبدیل کرده،
-  //              هر بایت را به یک رشته هگز ۲ کاراکتری تبدیل می‌کنیم
-  //              و در نهایت همه را به هم می‌چسبانیم.
+
+
+
+
+
+
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
 
   return hashHex;
 }
 
+
+
+
+
+
+
+
+
+
+
+
 /**
- * EN: Compares a plain passcode against a previously-stored hash by
- *     re-hashing the plain value and doing a string comparison.
- *     (We can't "decrypt" a hash — hashing is one-way by design.)
- * FA: یک رمز ساده را با هش ذخیره‌شده مقایسه می‌کند؛ چون هش برگشت‌ناپذیر
- *     است، رمز ورودی را دوباره هش کرده و دو رشته هش را مقایسه می‌کنیم.
- *
- * @param {string} plainText
- * @param {string} storedHash
- * @returns {Promise<boolean>}
+ * متن واردشده را دوباره هش می‌کند و با هش ذخیره‌شده مقایسه می‌کند.
+ * خروجی true به معنی یکسان بودن مقدار ورودی با مقدار اصلی و false به معنی عدم تطابق است.
  */
 export async function verifyHash(plainText, storedHash) {
   const computedHash = await sha256Hash(plainText);
   return computedHash === storedHash;
+}
+
+const PASSCODE_HASH_KEY = "app_passcode_hash";
+const ENCRYPTION_SALT_KEY = "app_encryption_salt";
+
+
+/** آرایه بایت را به Base64 تبدیل می‌کند تا داده باینری قابل ذخیره در localStorage باشد. */
+function bytesToBase64(bytes) {
+  return btoa(String.fromCharCode(...bytes));
+}
+
+
+/** رشته Base64 ذخیره‌شده را دوباره به آرایه بایت مورد نیاز Web Crypto تبدیل می‌کند. */
+function base64ToBytes(value) {
+  return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+}
+
+
+/**
+ * Salt اختصاصی رمزنگاری را از حافظه می‌خواند یا در اولین اجرا یک Salt تصادفی می‌سازد.
+ * Salt محرمانه نیست، اما باعث می‌شود کلید مشتق‌شده بین نصب‌های مختلف یکسان نباشد.
+ */
+function getOrCreateEncryptionSalt() {
+  const storedSalt = localStorage.getItem(ENCRYPTION_SALT_KEY);
+  if (storedSalt) return base64ToBytes(storedSalt);
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  localStorage.setItem(ENCRYPTION_SALT_KEY, bytesToBase64(salt));
+  return salt;
+}
+
+
+/**
+ * با استفاده از هش PIN، Salt و الگوریتم PBKDF2 یک کلید ۲۵۶ بیتی AES-GCM تولید می‌کند.
+ * کلید خروجی قابل استخراج نیست و فقط عملیات رمزنگاری و رمزگشایی را در همان مرورگر انجام می‌دهد.
+ */
+async function deriveLocalEncryptionKey() {
+  const passcodeHash = localStorage.getItem(PASSCODE_HASH_KEY);
+  if (!passcodeHash) throw new Error("NO_APP_PASSCODE");
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(passcodeHash),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: getOrCreateEncryptionSalt(),
+      iterations: 150000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+
+/**
+ * متن حساس مانند رمز دستگاه را با AES-GCM رمزنگاری می‌کند.
+ * برای هر بار رمزنگاری IV تصادفی تازه ساخته می‌شود و خروجی شامل نسخه، IV و داده رمز‌شده است.
+ */
+export async function encryptSecret(plainText) {
+  if (!plainText) return "";
+
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveLocalEncryptionKey();
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    new TextEncoder().encode(plainText)
+  );
+
+  return JSON.stringify({
+    version: 1,
+    iv: bytesToBase64(iv),
+    data: bytesToBase64(new Uint8Array(encrypted))
+  });
+}
+
+
+/**
+ * بسته ساخته‌شده توسط encryptSecret را با کلید محلی رمزگشایی می‌کند.
+ * اگر PIN یا Salt تغییر کرده باشد، Web Crypto خطا می‌دهد تا داده اشتباه نمایش داده نشود.
+ */
+export async function decryptSecret(payload) {
+  if (!payload) return "";
+
+  const parsed = JSON.parse(payload);
+  const key = await deriveLocalEncryptionKey();
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: base64ToBytes(parsed.iv) },
+    key,
+    base64ToBytes(parsed.data)
+  );
+
+  return new TextDecoder().decode(decrypted);
 }

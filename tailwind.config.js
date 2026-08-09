@@ -1,15 +1,13 @@
-/** @type {import('tailwindcss').Config} */
+
 export default {
-  // "class" strategy => Redux (uiSlice) toggles the `dark` class on <html>.
-  // This keeps Tailwind's dark mode in sync with our own persisted state
-  // instead of relying only on the OS `prefers-color-scheme`.
+
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        // Brand palette — reused everywhere instead of hardcoded hex values
-        // so a future re-theme only touches this one file.
+
+
         brand: {
           DEFAULT: "#00A693",
           50: "#e6faf7",
@@ -27,9 +25,9 @@ export default {
           light: "#f2fffd",
           dark: "#0b1615"
         },
-        // Semantic status colors — used consistently across the donut
-        // legend, table status pills, and activity icons so "online"
-        // always means the same teal dot everywhere in the app.
+
+
+
         status: {
           online: "#00A693",
           offline: "#CBD5E1",
@@ -38,10 +36,7 @@ export default {
         }
       },
       fontFamily: {
-        // Vazirmatn renders both Persian and Latin glyphs cleanly, so we
-        // use a single font-family for both languages instead of swapping
-        // fonts on locale change (fewer layout-shift bugs).
-        sans: ["Vazirmatn", "Inter", "system-ui", "sans-serif"]
+        sans: ["Vazirmatn", "system-ui", "sans-serif"]
       },
       keyframes: {
         "pulse-logo": {
@@ -67,8 +62,8 @@ export default {
       }
     }
   },
-  // corePlugins.preflight stays on; RTL is handled via the `dir` attribute
-  // on <html> (set in src/i18n/index.js) rather than a Tailwind RTL plugin,
-  // which keeps the dependency list smaller and easier for juniors to trace.
+
+
+
   plugins: []
 };
