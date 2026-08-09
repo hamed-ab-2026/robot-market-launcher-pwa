@@ -58,7 +58,6 @@ export default function App() {
             }}>
 
             <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors duration-300">
-                {}
                 {isStandalone ? <AppRouter/> : <InstallGate/>}
             </div>
         </ConfigProvider>);
