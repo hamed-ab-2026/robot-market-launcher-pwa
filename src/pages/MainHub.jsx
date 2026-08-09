@@ -227,7 +227,7 @@ export default function MainHub() {
     <div className="min-h-screen bg-surface-light pb-10 dark:bg-surface-dark">
       <header className="sticky top-0 z-20 border-b border-white/70 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-          <RobotMascot variant="mark" className="h-10 w-10 flex-none" />
+          <RobotMascot variant="robot" className="h-10 w-10 flex-none" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-bold text-slate-800 dark:text-white">{t("hub.title")}</h1>
             <div className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-300">

@@ -7,16 +7,11 @@ import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
 
 
-/**
- * وقتی برنامه در حالت Standalone اجرا نشده باشد، راهنمای نصب PWA و دکمه نصب بومی را نمایش می‌دهد.
- * مرورگرهای بدون beforeinstallprompt همچنان راهنمای دستی افزودن به صفحه اصلی را مشاهده می‌کنند.
- */
 export default function InstallGate() {
     const {t} = useTranslation();
     const {canInstall, promptInstall} = useInstallPrompt();
     const [isInstalling, setIsInstalling] = useState(false);
 
-    /** درخواست نصب ذخیره‌شده را اجرا و نتیجه رد شدن یا نبود امکان نصب را به کاربر اعلام می‌کند. */
     async function handleInstallClick() {
         setIsInstalling(true);
         try {
@@ -52,7 +47,6 @@ export default function InstallGate() {
                     {t("install.description")}
                 </p>
 
-                {}
                 {canInstall &&
                     <Button
                         type="primary"
@@ -66,7 +60,6 @@ export default function InstallGate() {
                     </Button>
                 }
 
-                {}
                 <div
                     className="mt-8 w-full max-w-sm rounded-3xl border border-slate-100 bg-white p-5 text-start shadow-sm shadow-slate-200/50 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
                     <h2 className="mb-3 text-sm font-semibold text-brand-600 dark:text-brand-300">

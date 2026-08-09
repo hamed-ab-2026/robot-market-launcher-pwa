@@ -16,7 +16,6 @@ export function useInstallPrompt() {
             setDeferredPrompt(event);
         }
 
-        /** پس از نصب موفق، رویداد مصرف‌شده را پاک و وضعیت نصب را به‌روز می‌کند. */
         function handleAppInstalled() {
             setDeferredPrompt(null);
             setIsInstalled(true);
@@ -32,7 +31,6 @@ export function useInstallPrompt() {
     }, []);
 
 
-    /** پنجره نصب ذخیره‌شده را نمایش می‌دهد و انتخاب قبول یا رد کاربر را برمی‌گرداند. */
     const promptInstall = useCallback(async () => {
         if (!deferredPrompt) return null;
 
