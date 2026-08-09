@@ -6,11 +6,9 @@ export default function RobotMascot({variant = "robot", className = ""}) {
         return (
             <img className={className} src="/icons/icon-192.png" alt="logo-RobotMarket"/>
         );
-
     }
 
     if (variant === "logo-RobotMarket") {
-
         return (
             <img className={className} src="/images/logo-RobotMarket.png" alt="logo-RobotMarket"/>
         );
