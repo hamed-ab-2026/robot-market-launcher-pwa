@@ -3,10 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="4ec6b313-edf9-4661-80e8-276f70b1c5ea" name="Changes" comment="update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dev-dist/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/dev-dist/sw.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useInstallPrompt.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useInstallPrompt.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/pages/InstallGate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/InstallGate.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,7 +60,7 @@
       <updated>1786177976403</updated>
       <workItem from="1786177978972" duration="5718000" />
       <workItem from="1786185594145" duration="2524000" />
-      <workItem from="1786247727281" duration="11346000" />
+      <workItem from="1786247727281" duration="12172000" />
     </task>
     <task id="LOCAL-00001" summary="update">
       <option name="closed" value="true" />
@@ -96,7 +94,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786260277606</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="update">
+      <option name="closed" value="true" />
+      <created>1786261965255</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1786261965255</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
