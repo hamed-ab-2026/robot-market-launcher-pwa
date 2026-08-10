@@ -131,17 +131,12 @@ export default function MainHub() {
     }
 
 
-    /**
-     * فرم دستگاه را بررسی، آدرس اتصال را آزمایش و رکورد ایجادشده یا ویرایش‌شده را ذخیره می‌کند.
-     * پس از موفقیت، state جدول دوباره از localStorage خوانده می‌شود تا UI با منبع داده هماهنگ بماند.
-     */
     async function handleSaveDevice() {
         const values = await deviceForm.validateFields();
         setIsSaving(true);
         try {
             const candidate = {...editingDevice, ...values};
-            const discoveredInfo = await fetchDeviceInfo(candidate);
-            await saveDevice({...candidate, ...discoveredInfo});
+            await saveDevice(candidate);
             setDevices(loadDevices());
             setDeviceModalOpen(false);
             message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));

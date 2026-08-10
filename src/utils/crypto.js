@@ -86,10 +86,7 @@ async function deriveLocalEncryptionKey() {
 }
 
 
-/**
- * متن حساس مانند رمز دستگاه را با AES-GCM رمزنگاری می‌کند.
- * برای هر بار رمزنگاری IV تصادفی تازه ساخته می‌شود و خروجی شامل نسخه، IV و داده رمز‌شده است.
- */
+
 export async function encryptSecret(plainText) {
     if (!plainText) return "";
 
@@ -109,10 +106,6 @@ export async function encryptSecret(plainText) {
 }
 
 
-/**
- * بسته ساخته‌شده توسط encryptSecret را با کلید محلی رمزگشایی می‌کند.
- * اگر PIN یا Salt تغییر کرده باشد، Web Crypto خطا می‌دهد تا داده اشتباه نمایش داده نشود.
- */
 export async function decryptSecret(payload) {
     if (!payload) return "";
 
