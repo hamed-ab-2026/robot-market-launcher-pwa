@@ -101,6 +101,17 @@
       "staticIp": "Static IP",
       "hostnamePreview": "Device address: http://{{serial}}.local"
     },
+    "passwordChange": {
+      "title": "Change device password",
+      "description": "This account must set a new password on its first sign-in.",
+      "oldPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Change password and sign in",
+      "required": "This field is required",
+      "tooShort": "The new password must contain at least {{count}} characters",
+      "mismatch": "The new password and confirmation do not match"
+    },
     "messages": {
       "credentialsSaved": "Credentials saved securely",
       "saveFailed": "Could not save the information",
@@ -110,6 +121,12 @@
       "deviceDeleted": "Device deleted",
       "connectionFailed": "Could not communicate with the device",
       "loginFailed": "Could not sign in to the device panel",
+      "missingCredentials": "Save the device username and password to use automatic sign-in. The panel was opened for manual sign-in.",
+      "autoLoginFailed": "Automatic sign-in failed. The panel was opened for manual sign-in.",
+      "firstLoginRequired": "This account must change its password on first sign-in. Continue inside the panel.",
+      "passwordChanged": "The device password was changed and the saved credentials were updated",
+      "passwordChangeFailed": "Could not change the device password",
+      "oldPasswordInvalid": "The current password is incorrect",
       "noDevices": "Add a device first",
       "baseInfoReceived": "Base information received"
     }

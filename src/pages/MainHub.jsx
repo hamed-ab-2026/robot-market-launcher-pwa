@@ -55,6 +55,7 @@ const EMPTY_DEVICE = {
     username: "",
     password: ""
 };
+const MIN_NEW_PASSWORD_LENGTH = 8;
 
 
 /**
@@ -73,8 +74,11 @@ export default function MainHub() {
     const [editingDevice, setEditingDevice] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [passwordChangeContext, setPasswordChangeContext] = useState(null);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [deviceForm] = Form.useForm();
     const [onlineForm] = Form.useForm();
+    const [changePasswordForm] = Form.useForm();
     const connectionMode = Form.useWatch("connectionMode", deviceForm) || "dhcp";
     const serialValue = Form.useWatch("serial", deviceForm) || "SN404023";
 
@@ -174,7 +178,148 @@ export default function MainHub() {
         }
     }
 
-    /** ستون‌های جدول را از ترجمه فعال می‌سازد و تا زمان تغییر زبان دوباره محاسبه نمی‌کند. */
+
+    async function loginThenOpenDevice(device, openMode) {
+        let deviceWithCredentials;
+
+        try {
+            deviceWithCredentials = await getEditableDevice(device);
+        } catch (error) {
+            console.error("Could not decrypt device credentials", error);
+            message.warning(t("hub.messages.autoLoginFailed"));
+            openDevicePanel(device, openMode);
+            return;
+        }
+
+        const username = deviceWithCredentials.username?.trim();
+        const password = deviceWithCredentials.password;
+
+        if (!username || !password) {
+            message.warning(t("hub.messages.missingCredentials"));
+            openDevicePanel(device, openMode);
+            return;
+        }
+
+        const baseUrl = buildDeviceBaseUrl(deviceWithCredentials);
+
+        try {
+            const response = await fetch(`${baseUrl}/api/login`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({username, password})
+            });
+
+            if (!response.ok) {
+                throw new Error(`API_ERROR_${response.status}`);
+            }
+
+            const loginResult = await response.json();
+
+            if (!loginResult?.success) {
+                throw new Error("DEVICE_LOGIN_REJECTED");
+            }
+
+            if (loginResult.isFirstTime) {
+                setPasswordChangeContext({
+                    device,
+                    openMode,
+                    username,
+                    oldPassword: password
+                });
+                changePasswordForm.setFieldsValue({
+                    oldPassword: password,
+                    newPassword: "",
+                    confirmPassword: ""
+                });
+                return;
+            }
+
+            if (!loginResult.token) {
+                throw new Error("DEVICE_LOGIN_TOKEN_MISSING");
+            }
+
+            openDevicePanel(device, openMode, {
+                token: loginResult.token,
+                role: loginResult.role
+            });
+        } catch (error) {
+            console.error("Automatic device login failed", error);
+            message.warning(t("hub.messages.autoLoginFailed"));
+            openDevicePanel(device, openMode);
+        }
+    }
+
+    async function handleRequiredPasswordChange() {
+        if (!passwordChangeContext) return;
+
+        const values = await changePasswordForm.validateFields();
+        const {device, openMode, username} = passwordChangeContext;
+        const baseUrl = buildDeviceBaseUrl(device);
+
+        setIsChangingPassword(true);
+        try {
+            const response = await fetch(`${baseUrl}/api/change-password`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    username,
+                    oldPassword: values.oldPassword,
+                    newPassword: values.newPassword
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API_ERROR_${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result?.success || !result.token) {
+                throw new Error("PASSWORD_CHANGE_REJECTED");
+            }
+
+            // فقط بعد از تأیید API، رمز جدید جایگزین رمز رمزنگاری‌شده قبلی می‌شود.
+            await saveDevice({
+                ...device,
+                username,
+                password: values.newPassword
+            });
+            setDevices(loadDevices());
+
+            setPasswordChangeContext(null);
+            changePasswordForm.resetFields();
+            message.success(t("hub.messages.passwordChanged"));
+            openDevicePanel(device, openMode, {
+                token: result.token,
+                role: result.role
+            });
+        } catch (error) {
+            console.error("Device password change failed", error);
+            const isInvalidOldPassword = String(error?.message).includes("401");
+            message.error(t(isInvalidOldPassword ?
+                "hub.messages.oldPasswordInvalid" :
+                "hub.messages.passwordChangeFailed"));
+        } finally {
+            setIsChangingPassword(false);
+        }
+    }
+
+    function openDevicePanel(device, openMode, autoLogin = null) {
+        const baseUrl = buildDeviceBaseUrl(device);
+        let panelUrl = baseUrl;
+
+        if (autoLogin) {
+            const targetUrl = new URL(baseUrl);
+            targetUrl.hash = `rm_auto_login=${encodeURIComponent(JSON.stringify(autoLogin))}`;
+            panelUrl = targetUrl.toString();
+        }
+
+        if (openMode === "iframe") {
+            setIframeDevice({...device, panelUrl});
+        } else {
+            window.location.assign(panelUrl);
+        }
+    }
+
     const columns = useMemo(() => [
             {
                 title: t("hub.table.device"),
@@ -199,7 +344,7 @@ export default function MainHub() {
             //     title: t("hub.table.connection"),
             //     dataIndex: "connectionMode",
             //     key: "connectionMode",
-            //     width: 50,
+            //     width: 140,
             //     render: (mode) =>
             //         <Tag color={mode === "dhcp" ? "cyan" : "geekblue"}>
             //             {mode === "dhcp" ? t("hub.deviceForm.dhcp") : t("hub.deviceForm.staticIp")}
@@ -213,11 +358,12 @@ export default function MainHub() {
                 render: (_, device) =>
                     <Space size="small" wrap>
                         <Tooltip title={t("hub.actions.iframe")}>
-                            <Button type="text" icon={<DesktopOutlined/>} onClick={() => setIframeDevice(device)}/>
+                            <Button type="text" icon={<DesktopOutlined/>}
+                                    onClick={() => loginThenOpenDevice(device, "iframe")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.direct")}>
                             <Button type="text" icon={<LinkOutlined/>}
-                                    onClick={() => window.location.assign(buildDeviceBaseUrl(device))}/>
+                                    onClick={() => loginThenOpenDevice(device, "direct")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.edit")}>
                             <Button type="text" icon={<EditOutlined/>} onClick={() => openEditDevice(device)}/>
@@ -359,13 +505,67 @@ export default function MainHub() {
                             <Button onClick={() => setIframeDevice(null)}>{t("common.close")}</Button>
                         </div>
                         <iframe
-                            src={buildDeviceBaseUrl(iframeDevice)}
+                            src={iframeDevice.panelUrl || buildDeviceBaseUrl(iframeDevice)}
                             title={iframeDevice.name}
                             className="h-[65vh] min-h-[420px] w-full bg-white"/>
 
                     </section>
                 }
             </main>
+
+            <Modal
+                title={t("hub.passwordChange.title")}
+                open={Boolean(passwordChangeContext)}
+                confirmLoading={isChangingPassword}
+                okText={t("hub.passwordChange.submit")}
+                cancelText={t("common.cancel")}
+                onOk={handleRequiredPasswordChange}
+                onCancel={() => {
+                    setPasswordChangeContext(null);
+                    changePasswordForm.resetFields();
+                }}
+                destroyOnClose>
+
+                <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+                    {t("hub.passwordChange.description")}
+                </p>
+                <Form form={changePasswordForm} layout="vertical">
+                    <Form.Item
+                        name="oldPassword"
+                        label={t("hub.passwordChange.oldPassword")}
+                        rules={[{required: true, message: t("hub.passwordChange.required")}]}>
+                        <Input.Password autoComplete="current-password"/>
+                    </Form.Item>
+                    <Form.Item
+                        name="newPassword"
+                        label={t("hub.passwordChange.newPassword")}
+                        rules={[
+                            {required: true, message: t("hub.passwordChange.required")},
+                            {
+                                min: MIN_NEW_PASSWORD_LENGTH,
+                                message: t("hub.passwordChange.tooShort", {count: MIN_NEW_PASSWORD_LENGTH})
+                            }
+                        ]}>
+                        <Input.Password autoComplete="new-password"/>
+                    </Form.Item>
+                    <Form.Item
+                        name="confirmPassword"
+                        label={t("hub.passwordChange.confirmPassword")}
+                        dependencies={["newPassword"]}
+                        rules={[
+                            {required: true, message: t("hub.passwordChange.required")},
+                            ({getFieldValue}) => ({
+                                validator(_, value) {
+                                    return !value || getFieldValue("newPassword") === value ?
+                                        Promise.resolve() :
+                                        Promise.reject(new Error(t("hub.passwordChange.mismatch")));
+                                }
+                            })
+                        ]}>
+                        <Input.Password autoComplete="new-password"/>
+                    </Form.Item>
+                </Form>
+            </Modal>
 
             <Modal
                 title={t("hub.onlineModal.title")}
@@ -427,10 +627,10 @@ export default function MainHub() {
                     <Form.Item name="type" label={t("hub.fields.deviceType")}>
                         <Input/>
                     </Form.Item>
-                    <Form.Item name="username" label={t("hub.fields.username")} rules={[{required: true}]}>
+                    <Form.Item name="username" label={t("hub.fields.username")}>
                         <Input autoComplete="username"/>
                     </Form.Item>
-                    <Form.Item name="password" label={t("hub.fields.password")} rules={[{required: true}]}>
+                    <Form.Item name="password" label={t("hub.fields.password")}>
                         <Input.Password autoComplete="new-password"/>
                     </Form.Item>
                 </Form>
