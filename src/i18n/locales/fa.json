@@ -42,6 +42,16 @@
     "connectButton": "اتصال",
     "title": "مرکز مدیریت دستگاه‌های ربات",
     "onlineStatus": "آنلاین",
+    "connectivity": {
+      "checking": "در حال بررسی اتصال",
+      "online": "آنلاین",
+      "offline": "آفلاین"
+    },
+    "tutorial": {
+      "title": "آموزش استفاده از برنامه",
+      "description": "پیش از اتصال به ربات‌ها، ویدیوی راهنمای برنامه را مشاهده کنید.",
+      "placeholder": "فایل ویدیوی آموزشی را با نام tutorial.mp4 در مسیر public/videos قرار دهید یا آدرس آن را در VITE_TUTORIAL_VIDEO_URL تنظیم کنید."
+    },
     "receiveBaseInfo": "دریافت اطلاعات پایه",
     "deviceList": "دستگاه‌های آفلاین",
     "deviceListDescription": "مدیریت ربات‌های محلی و ورود به پنل کنترل آن‌ها",
@@ -99,6 +109,7 @@
       "deviceUpdated": "دستگاه ویرایش شد",
       "deviceDeleted": "دستگاه حذف شد",
       "connectionFailed": "ارتباط با دستگاه برقرار نشد",
+      "loginFailed": "ورود به پنل دستگاه انجام نشد",
       "noDevices": "ابتدا یک دستگاه اضافه کنید",
       "baseInfoReceived": "اطلاعات پایه دریافت شد"
     }

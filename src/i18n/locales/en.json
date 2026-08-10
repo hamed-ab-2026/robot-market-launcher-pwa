@@ -42,6 +42,16 @@
     "connectButton": "Connect",
     "title": "Robot device center",
     "onlineStatus": "Online",
+    "connectivity": {
+      "checking": "Checking connection",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "tutorial": {
+      "title": "How to use the app",
+      "description": "Watch the tutorial before connecting to your robots.",
+      "placeholder": "Add your tutorial video at public/videos/tutorial.mp4 or set VITE_TUTORIAL_VIDEO_URL in the .env file."
+    },
     "receiveBaseInfo": "Receive base information",
     "deviceList": "Offline devices",
     "deviceListDescription": "Manage local robots and open their control panels",
@@ -99,6 +109,7 @@
       "deviceUpdated": "Device updated",
       "deviceDeleted": "Device deleted",
       "connectionFailed": "Could not communicate with the device",
+      "loginFailed": "Could not sign in to the device panel",
       "noDevices": "Add a device first",
       "baseInfoReceived": "Base information received"
     }

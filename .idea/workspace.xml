@@ -2,8 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4ec6b313-edf9-4661-80e8-276f70b1c5ea" name="Changes" comment="update">
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/RobotMascot.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/RobotMascot.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dev-dist/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/dev-dist/sw.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/i18n/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n/locales/en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/i18n/locales/fa.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n/locales/fa.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/MainHub.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/MainHub.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +66,8 @@
       <updated>1786177976403</updated>
       <workItem from="1786177978972" duration="5718000" />
       <workItem from="1786185594145" duration="2524000" />
-      <workItem from="1786247727281" duration="22108000" />
+      <workItem from="1786247727281" duration="22148000" />
+      <workItem from="1786334062614" duration="5202000" />
     </task>
     <task id="LOCAL-00001" summary="update">
       <option name="closed" value="true" />
@@ -126,7 +133,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786275231089</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="update">
+      <option name="closed" value="true" />
+      <created>1786275297206</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1786275297206</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

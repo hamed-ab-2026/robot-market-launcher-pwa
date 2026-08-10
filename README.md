@@ -1,105 +1,123 @@
-# Robot Fleet Manager — PWA Dashboard
+# Robot Market Launcher PWA
 
-A high-end, installable (PWA-only) hardware management dashboard for a robot
-device fleet — **"Robot Market"**. React 18 + Tailwind CSS + Ant Design +
-Redux Toolkit + Axios + react-i18next (Persian default / English), with
-SHA-256 passcode lock and WebAuthn biometric unlock.
+لانچر نصب‌شونده مدیریت ربات‌ها با رابط فارسی/انگلیسی، قفل محلی، ورود بیومتریک و دسترسی به پنل‌های آنلاین و محلی.
 
-> Visual design is matched directly against the provided "Robot Market"
-> concept: brand teal `#00A693` on `#f2fffd`, rounded-3xl white cards with
-> soft shadows, a fingerprint-first passcode screen with rounded-square
-> keys, a teal-line sales chart, and a donut-chart device breakdown. Colors
-> live in one place: `tailwind.config.js` → `theme.extend.colors`.
+## امکانات نسخه فعلی
 
-## Quick start
+- اجرای اجباری در حالت PWA و نمایش راهنمای نصب در تب عادی مرورگر
+- رابط فارسی RTL و انگلیسی LTR
+- تم روشن و تاریک با ذخیره انتخاب کاربر
+- PIN شش‌رقمی با ذخیره هش SHA-256
+- ورود محلی با اثرانگشت، Face ID یا Windows Hello در دستگاه‌های سازگار
+- قفل خودکار نشست پس از دو دقیقه حضور برنامه در پس‌زمینه
+- نمایش زنده تاریخ شمسی و ساعت
+- بررسی واقعی اتصال اینترنت هنگام ورود، تغییر وضعیت شبکه و هر ۳۰ ثانیه
+- بخش ویدیوی آموزشی قابل تنظیم
+- ثبت دستگاه محلی با DHCP/mDNS یا IP ثابت
+- بازکردن پنل دستگاه داخل برنامه یا در صفحه مستقیم
+- رمزنگاری رمز دستگاه‌ها و پنل آنلاین با AES-GCM
+
+## راه‌اندازی
 
 ```bash
 npm install
-cp .env.example .env      # then edit VITE_DEV_MODE / VITE_API_BASE_URL
-npm run dev                # http://localhost:5173
+copy .env.example .env
+npm run dev
 ```
 
-Because the app is **PWA-only by design**, opening that URL in a normal
-browser tab will show the **Install Gate**, not the dashboard. To actually
-test the protected flow:
+سرور توسعه به‌صورت پیش‌فرض در `http://localhost:5173` اجرا می‌شود. چون برنامه PWA-only است، در تب عادی صفحه نصب نمایش داده خواهد شد.
 
-1. `npm run build && npm run preview`
-2. Open the preview URL in Chrome/Edge
-3. Install it (address-bar install icon, or the InstallGate's instructions)
-4. Open the **installed** app — now the Splash → Auth → Hub → Dashboard flow
-   runs normally.
+برای آزمایش جریان نصب‌شده:
 
-(During `npm run dev` you can also temporarily comment out the
-`isStandalone === false` check in `src/routes/AppRouter.jsx` to iterate on
-UI without reinstalling every time — just remember to revert it.)
-
-## Project structure
-
+```bash
+npm run build
+npm run preview
 ```
+
+سپس برنامه را از منوی Chrome یا Edge نصب و از آیکون نصب‌شده اجرا کنید.
+
+## تنظیمات محیطی
+
+فایل `.env.example` را به `.env` کپی کنید و مقادیر لازم را تغییر دهید:
+
+```env
+VITE_DEV_MODE=true
+VITE_API_BASE_URL=https://api.example-robot.local
+VITE_API_TIMEOUT=10000
+VITE_CONNECTIVITY_CHECK_URL=https://www.gstatic.com/generate_204
+VITE_TUTORIAL_VIDEO_URL=/videos/tutorial.mp4
+```
+
+### ویدیوی آموزشی
+
+ساده‌ترین روش، قراردادن فایل ویدیو در مسیر زیر است:
+
+```text
+public/videos/tutorial.mp4
+```
+
+برای استفاده از CDN یا فایل خارجی، مقدار `VITE_TUTORIAL_VIDEO_URL` را به URL مستقیم فایل ویدیو تغییر دهید. URL باید مستقیماً به فرمتی قابل پخش توسط مرورگر، مانند MP4، اشاره کند؛ لینک معمول صفحه YouTube برای تگ ویدیو مناسب نیست.
+
+### بررسی وضعیت آنلاین
+
+برنامه ابتدا وضعیت شبکه مرورگر را بررسی می‌کند و سپس یک درخواست واقعی به `VITE_CONNECTIVITY_CHECK_URL` می‌فرستد. بررسی در این زمان‌ها تکرار می‌شود:
+
+- هنگام ورود به هاب
+- با رخداد آنلاین یا آفلاین مرورگر
+- هر ۳۰ ثانیه
+- با لمس وضعیت اتصال در سربرگ
+
+برای محیط سازمانی بهتر است این مقدار به یک endpoint سبک و پایدار متعلق به زیرساخت خودتان، مانند `/health`، اشاره کند.
+
+## گردش کار برنامه
+
+1. برنامه تشخیص می‌دهد آیا به‌صورت PWA مستقل اجرا شده است.
+2. در حالت مرورگر، صفحه راهنمای نصب نمایش داده می‌شود.
+3. در حالت نصب‌شده، Splash Screen به مدت پنج ثانیه نمایش داده می‌شود.
+4. کاربر در اولین اجرا PIN شش‌رقمی را ایجاد و تأیید می‌کند.
+5. در صورت پشتیبانی دستگاه، ثبت بیومتریک پیشنهاد می‌شود.
+6. کاربر وارد هاب اصلی می‌شود و وضعیت واقعی اتصال، تاریخ شمسی، ساعت و ویدیوی آموزشی را می‌بیند.
+7. کاربر می‌تواند اطلاعات پنل آنلاین را ذخیره کند یا دستگاه محلی اضافه کند.
+8. آدرس دستگاه DHCP به شکل `http://SERIAL.local` و دستگاه IP ثابت به شکل `http://IP` ساخته می‌شود.
+9. پنل دستگاه داخل iframe یا مستقیماً در مرورگر باز می‌شود.
+
+## ساختار اصلی
+
+```text
 src/
-├── api/                  # Axios instance, mock adapter, per-domain services
-│   ├── axiosConfig.js     # ONE place that creates/configures axios + error handling
-│   ├── mockAdapter.js      # axios-mock-adapter wiring (dev mode only)
-│   ├── mockData.js         # fake dataset returned by the mock adapter
-│   └── deviceService.js    # fetchDeviceOverview(), pingDevice() — used by thunks
 ├── components/
-│   ├── auth/NumericKeypad.jsx     # the 6-digit passcode keypad (setup + unlock)
-│   ├── common/                    # LanguageSwitcher, ThemeToggle
-│   ├── dashboard/                 # StatCard, DeviceStatusBadge
-│   └── layout/                    # Sidebar (desktop), MobileDrawer, DashboardLayout
+│   ├── auth/                 # صفحه‌کلید و نمایش PIN
+│   └── common/               # زبان، تم، تاریخ شمسی و اجزای مشترک
 ├── hooks/
-│   ├── usePWA.js           # standalone-mode detection (the PWA-only gate)
-│   ├── useWebAuthn.js      # Face ID / fingerprint register + authenticate
-│   └── useDarkMode.js      # syncs Redux darkMode -> <html class="dark">
-├── i18n/                   # react-i18next config + fa.json / en.json
-├── pages/                  # SplashScreen, InstallGate, AuthPage, MainHub, Dashboard
-├── routes/AppRouter.jsx    # Splash -> Gateway -> Auth -> Hub -> Dashboard flow
-├── store/
-│   ├── store.js
-│   └── slices/{authSlice,uiSlice,deviceSlice}.js
-└── utils/crypto.js         # SHA-256 hashing (Web Crypto API), no external lib
+│   ├── useConnectivityStatus.js
+│   ├── useDarkMode.js
+│   ├── useInstallPrompt.js
+│   ├── useIsStandalone.js
+│   └── useWebAuthn.js
+├── i18n/                     # ترجمه فارسی و انگلیسی
+├── pages/                    # نصب، Splash، احراز هویت و هاب
+├── routes/AppRouter.jsx
+├── services/
+│   ├── deviceApi.js          # آداپتور فعلی اطلاعات دستگاه
+│   └── hubStorage.js         # ذخیره محلی و رمزنگاری اطلاعات
+├── store/                    # وضعیت احراز هویت و رابط کاربری
+└── utils/crypto.js           # SHA-256، PBKDF2 و AES-GCM
 ```
 
-## Core behaviors, at a glance
+## نکات امنیتی و محدودیت‌های فعلی
 
-- **Dual language**: `src/i18n/index.js` defaults to Persian, persists the
-  choice to `localStorage`, and flips `<html dir>` between `rtl`/`ltr` — Ant
-  Design's `ConfigProvider direction` follows the same flag, so every AntD
-  component (Table, Drawer, Dropdown...) mirrors automatically.
-- **Dark mode**: `uiSlice.darkMode` (default `false`) is the single source
-  of truth; `useDarkMode()` is the *only* place that toggles the `dark`
-  class on `<html>`. Every card/sidebar uses Tailwind `dark:` classes.
-- **Developer / Mock mode**: set `VITE_DEV_MODE=true` in `.env` (default in
-  `.env.example`) and every request through `src/api/axiosConfig.js` is
-  answered by `axios-mock-adapter` with the data in `mockData.js` — no real
-  device or backend needed to develop the UI. Flip it to `false` once real
-  hardware/API is available; no component code changes needed.
-- **PWA-only access control**: `App.jsx` calls `useIsStandalone()`
-  (checks `matchMedia('(display-mode: standalone)')` + iOS/Android
-  fallbacks) and renders `<InstallGate/>` directly instead of mounting
-  the router at all when the app isn't running standalone — browsers
-  never see anything past that.
-- **One-tap install**: `hooks/useInstallPrompt.js` captures the
-  browser's native `beforeinstallprompt` event and replays it when the
-  user taps "Install App" on `InstallGate`. This only works on
-  Chromium-based browsers; Safari/iOS and Firefox fall back to the
-  manual "Add to Home Screen" steps shown on the same screen.
-- **Passcode security**: the 6-digit code is **never stored in plain
-  text** — `utils/crypto.js` hashes it with SHA-256 via the native
-  `crypto.subtle` API before it touches `localStorage`. `authSlice.js`
-  handles setup, unlock, wrong-attempt counting, and a temporary lockout.
-- **Biometric unlock**: `hooks/useWebAuthn.js` wraps
-  `navigator.credentials.create/get` for a platform authenticator
-  (Face ID / fingerprint / Windows Hello). This is a **local-only** demo
-  flow (no backend to verify challenges against) — see the comment at the
-  top of that file before using it in a real production auth system.
+- WebAuthn در این نسخه محلی است و اعتبارسنجی سمت سرور ندارد.
+- اطلاعات دستگاه‌ها فقط در مرورگر همان دستگاه نگهداری می‌شوند.
+- `fetchDeviceInfo` و ورود پنل آنلاین هنوز شبیه‌سازی‌شده‌اند و باید به API واقعی متصل شوند.
+- نمایش یک پنل HTTP داخل PWA مبتنی بر HTTPS ممکن است به‌علت Mixed Content مسدود شود.
+- پنل مقصد باید نمایش در iframe را از طریق CSP و `X-Frame-Options` مجاز کند.
+- رمزنگاری محلی مانع مشاهده ساده رمزها می‌شود، اما جایگزین مدیریت امن کلید و احراز هویت سمت سرور نیست.
 
-## Known follow-ups before shipping to production
+## دستورات
 
-- Replace the placeholder `public/icons/icon-*.png` with real branded
-  app icons (maskable-safe, per the PWA manifest spec).
-- Wire `src/api/deviceService.js` to your real device/API endpoints and
-  set `VITE_DEV_MODE=false`.
-- WebAuthn here has no server-side verification step — fine for a local
-  device-lock UX, but don't treat it as remote authentication as-is.
-- Add real route guards / RBAC if this dashboard will ever be multi-user.
+```bash
+npm run dev       # اجرای محیط توسعه
+npm run build     # ساخت نسخه production
+npm run preview   # پیش‌نمایش نسخه build
+npm run lint      # بررسی lint، در صورت وجود تنظیمات ESLint
+```
