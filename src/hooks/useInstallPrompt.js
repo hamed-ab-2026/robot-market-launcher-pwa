@@ -10,6 +10,12 @@ export function useInstallPrompt() {
     const [isInstalled, setIsInstalled] = useState(false);
 
     useEffect(() => {
+        /** حالت اجرای مستقل، نصب‌شدن برنامه روی دستگاه فعلی را با امکانات استاندارد مرورگر تشخیص می‌دهد. */
+        const standalone = window.matchMedia?.("(display-mode: standalone)").matches ||
+            window.navigator?.standalone === true ||
+            document.referrer?.startsWith("android-app://");
+        setIsInstalled(Boolean(standalone));
+
         /** رویداد موقت نصب را قبل از ازبین‌رفتن ذخیره و نمایش خودکار مرورگر را متوقف می‌کند. */
         function handleBeforeInstallPrompt(event) {
             event.preventDefault();

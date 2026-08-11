@@ -2,7 +2,7 @@ import React, {useState, useEffect, useCallback} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {useNavigate, useLocation} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import {message} from "antd";
+import {message, Modal} from "antd";
 
 import NumericKeypad from "../components/auth/NumericKeypad";
 import PasscodeDots from "../components/auth/PasscodeDots";
@@ -89,12 +89,22 @@ export default function AuthPage() {
                 }
                 await dispatch(setupPasscode(enteredValue));
 
+                // قبل از نمایش درخواست سیستمی اثر انگشت، انتخاب کاربر را با یک پنجره شفاف دریافت می‌کنیم.
                 if (isBiometricAvailable) {
-                    try {
-                        await registerBiometric();
-                    } catch {
-
-                    }
+                    Modal.confirm({
+                        title: t("auth.biometricSetupTitle"),
+                        content: t("auth.biometricSetupDescription"),
+                        okText: t("auth.biometricSetupConfirm"),
+                        cancelText: t("auth.biometricSetupSkip"),
+                        async onOk() {
+                            try {
+                                await registerBiometric();
+                                message.success(t("auth.biometricSetupSuccess"));
+                            } catch {
+                                message.error(t("auth.biometricSetupFailed"));
+                            }
+                        }
+                    });
                 }
                 return;
             }

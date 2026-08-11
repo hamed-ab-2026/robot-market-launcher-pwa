@@ -3,9 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="4ec6b313-edf9-4661-80e8-276f70b1c5ea" name="Changes" comment="update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dev-dist/sw.js" beforeDir="false" afterPath="$PROJECT_DIR$/dev-dist/sw.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useInstallPrompt.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useInstallPrompt.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/i18n/locales/en.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n/locales/en.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/i18n/locales/fa.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n/locales/fa.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/AuthPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/AuthPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/pages/InstallGate.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/InstallGate.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/pages/MainHub.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/MainHub.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/hubStorage.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/hubStorage.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/crypto.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/crypto.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +67,8 @@
       <workItem from="1786177978972" duration="5718000" />
       <workItem from="1786185594145" duration="2524000" />
       <workItem from="1786247727281" duration="22148000" />
-      <workItem from="1786334062614" duration="18366000" />
+      <workItem from="1786334062614" duration="18383000" />
+      <workItem from="1786421171006" duration="2326000" />
     </task>
     <task id="LOCAL-00001" summary="update">
       <option name="closed" value="true" />
@@ -153,7 +158,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786346398444</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="update">
+      <option name="closed" value="true" />
+      <created>1786361454241</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1786361454241</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

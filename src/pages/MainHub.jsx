@@ -2,12 +2,12 @@ import React, {useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {
     Button,
+    Carousel,
     Empty,
     Form,
     Input,
     message,
     Modal,
-    Popconfirm,
     Radio,
     Space,
     Table,
@@ -17,15 +17,18 @@ import {
         "antd";
 import {
     ApiOutlined,
+    AppstoreOutlined,
     CloudOutlined,
     DeleteOutlined,
     DesktopOutlined,
     EditOutlined,
     InfoCircleOutlined,
     LinkOutlined,
+    MessageOutlined,
     PlayCircleOutlined,
     ReloadOutlined,
     SafetyCertificateOutlined,
+    SettingOutlined,
     WifiOutlined
 } from
         "@ant-design/icons";
@@ -50,12 +53,19 @@ const EMPTY_DEVICE = {
     name: "",
     serial: "",
     type: "robot",
-    connectionMode: "dhcp",
-    ipAddress: "",
+    connectionMode: "static",
+    ipAddress: "192.168.4.1",
     username: "",
     password: ""
 };
 const MIN_NEW_PASSWORD_LENGTH = 8;
+
+// هر آیتم بعداً می‌تواند با شناسه یا نشانی embed یک ویدیوی آپارات جایگزین شود.
+const TUTORIAL_SLIDES = [
+    {id: "tutorial-1", aparatUrl: ""},
+    {id: "tutorial-2", aparatUrl: ""},
+    {id: "tutorial-3", aparatUrl: ""}
+];
 
 
 /**
@@ -65,8 +75,6 @@ const MIN_NEW_PASSWORD_LENGTH = 8;
 export default function MainHub() {
     const {t} = useTranslation();
     const {status: connectivityStatus, checkConnection} = useConnectivityStatus();
-    const [videoUnavailable, setVideoUnavailable] = useState(false);
-    const tutorialVideoUrl = import.meta.env.VITE_TUTORIAL_VIDEO_URL || "/videos/tutorial.mp4";
     const [devices, setDevices] = useState(loadDevices);
     const [deviceModalOpen, setDeviceModalOpen] = useState(false);
     const [onlineModalOpen, setOnlineModalOpen] = useState(false);
@@ -76,10 +84,14 @@ export default function MainHub() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [advancedDevice, setAdvancedDevice] = useState(null);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [chatText, setChatText] = useState("");
+    const [chatMessages, setChatMessages] = useState([]);
     const [deviceForm] = Form.useForm();
     const [onlineForm] = Form.useForm();
     const [changePasswordForm] = Form.useForm();
-    const connectionMode = Form.useWatch("connectionMode", deviceForm) || "dhcp";
+    const connectionMode = Form.useWatch("connectionMode", deviceForm) || "static";
     const serialValue = Form.useWatch("serial", deviceForm) || "SN404023";
 
 
@@ -153,6 +165,31 @@ export default function MainHub() {
         deleteDevice(deviceId);
         setDevices(loadDevices());
         message.success(t("hub.messages.deviceDeleted"));
+    }
+
+    /** پیام پشتیبانی را فعلاً در نشست جاری نگه می‌دارد تا بعداً به API واقعی چت متصل شود. */
+    function sendSupportMessage() {
+        const text = chatText.trim();
+        if (!text) return;
+        setChatMessages((current) => [...current, {id: crypto.randomUUID(), text}]);
+        setChatText("");
+    }
+
+    /** پیش از اجرای هر عملیات حساس دستگاه، تأیید صریح کاربر را دریافت می‌کند. */
+    function confirmDeviceAction({title, danger = false, action}) {
+        Modal.confirm({
+            title,
+            okText: t("common.confirm"),
+            cancelText: t("common.cancel"),
+            okButtonProps: {danger},
+            onOk: action
+        });
+    }
+
+    /** عملیات انتخاب‌شده را پس از تأیید اجرا و مودال تنظیمات پیشرفته را می‌بندد. */
+    function runAdvancedAction(config) {
+        setAdvancedDevice(null);
+        confirmDeviceAction(config);
     }
 
 
@@ -320,7 +357,7 @@ export default function MainHub() {
                 title: t("hub.table.device"),
                 dataIndex: "name",
                 key: "name",
-                width: 50,
+                width: 120,
                 render: (name, device) =>
                     <div>
                         <div className="font-semibold text-slate-800 dark:text-white">{name}</div>
@@ -349,30 +386,27 @@ export default function MainHub() {
             {
                 title: t("hub.table.actions"),
                 key: "actions",
-                width: 80,
+                width: 132,
                 render: (_, device) =>
-                    <Space size="small" wrap>
+                    <Space size="middle" wrap={false}>
                         <Tooltip title={t("hub.actions.iframe")}>
-                            <Button type="text" icon={<DesktopOutlined/>}
-                                    onClick={() => loginThenOpenDevice(device, "iframe")}/>
+                            <Button type="text" className="text-lg" icon={<DesktopOutlined/>}
+                                    onClick={() => confirmDeviceAction({
+                                        title: t("hub.actions.iframeConfirm"),
+                                        action: () => loginThenOpenDevice(device, "iframe")
+                                    })}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.direct")}>
-                            <Button type="text" icon={<LinkOutlined/>}
-                                    onClick={() => loginThenOpenDevice(device, "direct")}/>
+                            <Button type="text" className="text-lg" icon={<LinkOutlined/>}
+                                    onClick={() => confirmDeviceAction({
+                                        title: t("hub.actions.directConfirm"),
+                                        action: () => loginThenOpenDevice(device, "direct")
+                                    })}/>
                         </Tooltip>
-                        <Tooltip title={t("hub.actions.edit")}>
-                            <Button type="text" icon={<EditOutlined/>} onClick={() => openEditDevice(device)}/>
+                        <Tooltip title={t("hub.actions.advancedSettings")}>
+                            <Button type="text" className="text-lg" icon={<SettingOutlined/>}
+                                    onClick={() => setAdvancedDevice(device)}/>
                         </Tooltip>
-                        <Popconfirm
-                            title={t("hub.actions.deleteConfirm")}
-                            okText={t("common.confirm")}
-                            cancelText={t("common.cancel")}
-                            onConfirm={() => handleDeleteDevice(device.id)}>
-
-                            <Tooltip title={t("hub.actions.delete")}>
-                                <Button danger type="text" icon={<DeleteOutlined/>}/>
-                            </Tooltip>
-                        </Popconfirm>
                     </Space>
 
             }],
@@ -414,30 +448,16 @@ export default function MainHub() {
             </header>
 
             <main className="mx-auto max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
-                <section
-                    className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div className="flex items-center gap-3 border-b border-slate-100 p-4 sm:p-5 dark:border-slate-800">
-                        <span
-                            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><PlayCircleOutlined/></span>
-                        <div>
-                            <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.tutorial.title")}</h2>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.tutorial.description")}</p>
-                        </div>
-                    </div>
-                    <div className="bg-slate-950">
-                        {!videoUnavailable ?
-                            <video className="aspect-video max-h-[520px] w-full" controls preload="metadata" playsInline
-                                   onError={() => setVideoUnavailable(true)}>
-                                <source src={tutorialVideoUrl}/>
-                            </video> :
-                            <div
-                                className="flex aspect-video max-h-[420px] w-full flex-col items-center justify-center gap-3 px-6 text-center text-slate-300">
-                                <PlayCircleOutlined className="text-5xl text-brand-400"/>
-                                <p className="max-w-lg text-sm">{t("hub.tutorial.placeholder")}</p>
-                            </div>
-                        }
-                    </div>
-                </section>
+                <CollapsibleSection
+                    icon={<PlayCircleOutlined/>}
+                    title={t("hub.tutorial.title")}
+                    description={t("hub.tutorial.description")}>
+                    <Carousel arrows dots>
+                        {TUTORIAL_SLIDES.map((slide, index) =>
+                            <TutorialSlide key={slide.id} slide={slide} index={index} t={t}/>
+                        )}
+                    </Carousel>
+                </CollapsibleSection>
 
                 <div className="md:hidden"><PersianDateTime/></div>
 
@@ -451,41 +471,51 @@ export default function MainHub() {
                     {t("hub.receiveBaseInfo")}
                 </Button>
 
-                <section className="grid gap-4 lg:grid-cols-2">
-                    <PanelCard
-                        icon={<CloudOutlined/>}
-                        title={t("hub.onlinePanel.title")}
-                        description={t("hub.onlinePanel.description")}
-                        buttonText={t("hub.onlinePanel.button")}
-                        onClick={openOnlineLogin}/>
+                <CollapsibleSection
+                    icon={<AppstoreOutlined/>}
+                    title={t("hub.usefulApps.title")}
+                    description={t("hub.usefulApps.description")}>
+                    <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
+                        {[1, 2, 3,4].map((item) =>
+                            <div key={item} className="rounded-2xl border border-dashed border-slate-300 p-5 text-center dark:border-slate-700">
+                                <AppstoreOutlined className="text-3xl text-brand-500"/>
+                                <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                    {t("hub.usefulApps.placeholder", {number: item})}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </CollapsibleSection>
 
-                    <PanelCard
-                        icon={<ApiOutlined/>}
-                        title={t("hub.offlinePanel.title")}
-                        description={t("hub.offlinePanel.description")}
-                        buttonText={t("hub.addDevice")}
-                        onClick={openAddDevice}/>
-
-                </section>
-
-                <section
-                    className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div
-                        className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 sm:p-5 dark:border-slate-800">
-                        <div>
-                            <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h2>
+                <CollapsibleSection
+                    icon={<ApiOutlined/>}
+                    title={t("hub.deviceManagement.title")}
+                    description={t("hub.deviceManagement.description")}>
+                    <div className="grid gap-4 p-4 lg:grid-cols-2 sm:p-5">
+                        <PanelCard
+                            icon={<CloudOutlined/>}
+                            title={t("hub.onlinePanel.title")}
+                            description={t("hub.onlinePanel.description")}
+                            buttonText={t("hub.onlinePanel.button")}
+                            onClick={openOnlineLogin}/>
+                        <PanelCard
+                            icon={<ApiOutlined/>}
+                            title={t("hub.offlinePanel.title")}
+                            description={t("hub.offlinePanel.description")}
+                            buttonText={t("hub.addDevice")}
+                            onClick={openAddDevice}/>
+                    </div>
+                    <div className="border-t border-slate-100 dark:border-slate-800">
+                        <div className="p-4 sm:p-5">
+                            <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
                         </div>
+                        <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
+                               tableLayout="fixed"
+                               scroll={{x: 332}}
+                               locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
                     </div>
-                    <Table
-                        rowKey="id"
-                        columns={columns}
-                        dataSource={devices}
-                        pagination={false}
-                        scroll={{x: 720}}
-                        locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
-
-                </section>
+                </CollapsibleSection>
 
                 {iframeDevice &&
                     <section
@@ -507,6 +537,56 @@ export default function MainHub() {
                     </section>
                 }
             </main>
+
+            <button
+                type="button"
+                aria-label={t("hub.support.open")}
+                onClick={() => setChatOpen(true)}
+                className="fixed bottom-6 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">
+                <MessageOutlined/>
+            </button>
+
+            <Modal title={t("hub.support.title")} open={chatOpen} footer={null}
+                   onCancel={() => setChatOpen(false)}>
+                <div className="mb-4 h-64 overflow-y-auto rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
+                    {chatMessages.length === 0 ?
+                        <Empty description={t("hub.support.empty")}/> :
+                        <div className="space-y-3">
+                            {chatMessages.map((item) =>
+                                <div key={item.id} className="ms-auto max-w-[85%] rounded-2xl rounded-ee-sm bg-brand-500 px-4 py-2 text-sm text-white">
+                                    {item.text}
+                                </div>
+                            )}
+                        </div>
+                    }
+                </div>
+                <Space.Compact block>
+                    <Input value={chatText} placeholder={t("hub.support.placeholder")}
+                           onChange={(event) => setChatText(event.target.value)}
+                           onPressEnter={sendSupportMessage}/>
+                    <Button type="primary" icon={<MessageOutlined/>} onClick={sendSupportMessage}>
+                        {t("hub.support.send")}
+                    </Button>
+                </Space.Compact>
+                <p className="mt-2 text-xs text-slate-400">{t("hub.support.demoHint")}</p>
+            </Modal>
+
+            <Modal title={t("hub.advanced.title")} open={Boolean(advancedDevice)} footer={null}
+                   onCancel={() => setAdvancedDevice(null)}>
+                {advancedDevice &&
+                    <div className="grid gap-3">
+                        <Button icon={<EditOutlined/>} onClick={() => runAdvancedAction({
+                            title: t("hub.actions.editConfirm"),
+                            action: () => openEditDevice(advancedDevice)
+                        })}>{t("hub.actions.edit")}</Button>
+                        <Button danger icon={<DeleteOutlined/>} onClick={() => runAdvancedAction({
+                            title: t("hub.actions.deleteConfirm"),
+                            danger: true,
+                            action: () => handleDeleteDevice(advancedDevice.id)
+                        })}>{t("hub.actions.delete")}</Button>
+                    </div>
+                }
+            </Modal>
 
             <Modal
                 title={t("hub.passwordChange.title")}
@@ -578,10 +658,10 @@ export default function MainHub() {
                 </div>
                 <Form form={onlineForm} layout="vertical">
                     <Form.Item name="username" label={t("hub.fields.username")} rules={[{required: true}]}>
-                        <Input autoComplete="username"/>
+                        <Input autoComplete="username" placeholder={t("hub.placeholders.username")}/>
                     </Form.Item>
                     <Form.Item name="password" label={t("hub.fields.password")} rules={[{required: true}]}>
-                        <Input.Password autoComplete="current-password"/>
+                        <Input.Password autoComplete="current-password" placeholder={t("hub.placeholders.password")}/>
                     </Form.Item>
                 </Form>
             </Modal>
@@ -604,7 +684,7 @@ export default function MainHub() {
                         </Radio.Group>
                     </Form.Item>
                     <Form.Item name="name" label={t("hub.fields.deviceName")} rules={[{required: true}]}>
-                        <Input/>
+                        <Input placeholder={t("hub.placeholders.deviceName")}/>
                     </Form.Item>
                     <Form.Item
                         name="serial"
@@ -616,17 +696,17 @@ export default function MainHub() {
                     </Form.Item>
                     {connectionMode === "static" &&
                         <Form.Item name="ipAddress" label={t("hub.fields.ipAddress")} rules={[{required: true}]}>
-                            <Input dir="ltr" placeholder="192.168.1.100"/>
+                            <Input dir="ltr" placeholder="192.168.4.1"/>
                         </Form.Item>
                     }
                     <Form.Item name="type" label={t("hub.fields.deviceType")}>
-                        <Input/>
+                        <Input placeholder={t("hub.placeholders.deviceType")}/>
                     </Form.Item>
                     <Form.Item name="username" label={t("hub.fields.username")}>
-                        <Input autoComplete="username"/>
+                        <Input autoComplete="username" placeholder={t("hub.placeholders.username")}/>
                     </Form.Item>
                     <Form.Item name="password" label={t("hub.fields.password")}>
-                        <Input.Password autoComplete="new-password"/>
+                        <Input.Password autoComplete="new-password" placeholder={t("hub.placeholders.password")}/>
                     </Form.Item>
                 </Form>
             </Modal>
@@ -651,4 +731,46 @@ function PanelCard({icon, title, description, buttonText, onClick}) {
             <Button type="primary" onClick={onClick}>{buttonText}</Button>
         </article>);
 
+}
+
+/** یک سکشن جمع‌شونده می‌سازد که در شروع بسته است و محتوای سنگین را فقط هنگام بازشدن نمایش می‌دهد. */
+function CollapsibleSection({icon, title, description, children}) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <button type="button" onClick={() => setIsOpen((current) => !current)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center gap-3 p-4 text-start sm:p-5">
+                <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                    {icon}
+                </span>
+                <span className="min-w-0 flex-1">
+                    <span className="block font-bold text-slate-800 dark:text-white">{title}</span>
+                    <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{description}</span>
+                </span>
+                <span className={`text-xl text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}>⌄</span>
+            </button>
+            {isOpen && <div className="border-t border-slate-100 dark:border-slate-800">{children}</div>}
+        </section>
+    );
+}
+
+/** اسلاید آموزشی را به‌صورت iframe آپارات یا جای‌نگهدار قابل‌تعویض نمایش می‌دهد. */
+function TutorialSlide({slide, index, t}) {
+    if (slide.aparatUrl) {
+        return (
+            <iframe src={slide.aparatUrl} title={t("hub.tutorial.slideTitle", {number: index + 1})}
+                    allow="autoplay; fullscreen" allowFullScreen
+                    className="aspect-video w-full bg-slate-950"/>
+        );
+    }
+
+    return (
+        <div className="flex aspect-video max-h-[520px] w-full flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center text-slate-300">
+            <PlayCircleOutlined className="text-5xl text-brand-400"/>
+            <p className="font-semibold">{t("hub.tutorial.slideTitle", {number: index + 1})}</p>
+            <p className="max-w-lg text-sm">{t("hub.tutorial.placeholder")}</p>
+        </div>
+    );
 }

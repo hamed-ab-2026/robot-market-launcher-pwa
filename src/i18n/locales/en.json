@@ -10,6 +10,7 @@
     "title": "Installation Required",
     "description": "This management panel is only available as an installed app (PWA). Please install it on your device to continue.",
     "installButton": "Install App",
+    "alreadyInstalled": "The app is installed on your system",
     "installing": "Installing...",
     "installFailed": "Install didn't complete. Please use the guide below.",
     "orManually": "Or install manually",
@@ -27,6 +28,12 @@
     "unlockSubtitle": "Enter your passcode",
     "biometricPrompt": "or use Fingerprint / Face ID",
     "biometricButton": "Use biometrics",
+    "biometricSetupTitle": "Enable biometric access?",
+    "biometricSetupDescription": "Would you like to set up fingerprint, Face ID, or Windows Hello for this app?",
+    "biometricSetupConfirm": "Yes, set it up",
+    "biometricSetupSkip": "Not now",
+    "biometricSetupSuccess": "Biometric access was enabled",
+    "biometricSetupFailed": "Biometric access could not be enabled",
     "mismatchError": "Passcodes don't match. Please try again.",
     "wrongPasscode": "Incorrect passcode",
     "attemptsRemaining": "{{count}} attempts remaining",
@@ -50,7 +57,34 @@
     "tutorial": {
       "title": "How to use the app",
       "description": "Watch the tutorial before connecting to your robots.",
-      "placeholder": "Add your tutorial video at public/videos/tutorial.mp4 or set VITE_TUTORIAL_VIDEO_URL in the .env file."
+      "placeholder": "Your Aparat tutorial video will be placed here.",
+      "slideTitle": "Tutorial video {{number}}"
+    },
+    "usefulApps": {
+      "title": "Useful applications",
+      "description": "Quick links to related applications and services",
+      "placeholder": "Application link {{number}}"
+    },
+    "deviceManagement": {
+      "title": "Device management",
+      "description": "Add devices, sign in to panels, and manage registered robots"
+    },
+    "support": {
+      "title": "Support chat",
+      "open": "Open support chat",
+      "empty": "Send your first message to support",
+      "placeholder": "Write your message...",
+      "send": "Send",
+      "demoHint": "This chat is currently a placeholder and will be connected to the support service later."
+    },
+    "advanced": {
+      "title": "Advanced device settings"
+    },
+    "placeholders": {
+      "deviceName": "For example: Reception robot",
+      "deviceType": "For example: Service robot",
+      "username": "Enter the username",
+      "password": "Enter the password"
     },
     "receiveBaseInfo": "Receive base information",
     "deviceList": "Offline devices",
@@ -78,7 +112,11 @@
       "direct": "Open directly",
       "edit": "Edit",
       "delete": "Delete",
-      "deleteConfirm": "Delete this device?"
+      "deleteConfirm": "Are you sure you want to delete this device?",
+      "advancedSettings": "Advanced settings",
+      "iframeConfirm": "Open this device panel inside the app?",
+      "directConfirm": "Leave the app and open this device panel directly?",
+      "editConfirm": "Edit this device's information?"
     },
     "fields": {
       "username": "Username",

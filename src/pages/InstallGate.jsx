@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {Button, message} from "antd";
 import {useTranslation} from "react-i18next";
-import {DownloadOutlined, ReloadOutlined} from "@ant-design/icons";
+import {CheckCircleOutlined, DownloadOutlined, ReloadOutlined} from "@ant-design/icons";
 import {useInstallPrompt} from "../hooks/useInstallPrompt";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
@@ -9,7 +9,7 @@ import ThemeToggle from "../components/common/ThemeToggle";
 
 export default function InstallGate() {
     const {t} = useTranslation();
-    const {canInstall, promptInstall} = useInstallPrompt();
+    const {canInstall, isInstalled, promptInstall} = useInstallPrompt();
     const [isInstalling, setIsInstalling] = useState(false);
 
     async function handleInstallClick() {
@@ -47,7 +47,11 @@ export default function InstallGate() {
                     {t("install.description")}
                 </p>
 
-                {canInstall &&
+                {isInstalled ?
+                    <div className="mt-6 flex w-full max-w-sm items-center justify-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <CheckCircleOutlined/>
+                        {t("install.alreadyInstalled")}
+                    </div> : canInstall &&
                     <Button
                         type="primary"
                         size="large"
