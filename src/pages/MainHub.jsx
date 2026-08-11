@@ -590,10 +590,8 @@ export default function MainHub() {
                    onCancel={() => setAdvancedDevice(null)}>
                 {advancedDevice &&
                     <div className="grid gap-3">
-                        <Button icon={<EditOutlined/>} onClick={() => runAdvancedAction({
-                            title: t("hub.actions.editConfirm"),
-                            action: () => openEditDevice(advancedDevice)
-                        })}>{t("hub.actions.edit")}</Button>
+                        <Button icon={<EditOutlined/>}
+                                onClick={() => openEditDevice(advancedDevice)}>{t("hub.actions.edit")}</Button>
                         <Button danger icon={<DeleteOutlined/>} onClick={() => runAdvancedAction({
                             title: t("hub.actions.deleteConfirm"),
                             danger: true,
