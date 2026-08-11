@@ -52,5 +52,10 @@ export async function fetchDeviceInfo(device) {
  */
 export async function loginToOnlinePanel(credentials) {
   await wait(MOCK_DELAY_MS);
-  return { ok: true, username: credentials.username };
+  return {
+    ok: true,
+    username: credentials.username,
+    token: null,
+    redirectUrl: "https://panel.my-rm.com/login"
+  };
 }

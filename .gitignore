@@ -1,4 +1,8 @@
 node_modules/
+.idea/
+.env
+.env.*
+!.env.example
 .next/
 out/
 dist/

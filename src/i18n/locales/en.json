@@ -94,7 +94,10 @@
     "onlinePanel": {
       "title": "Online panel",
       "description": "Sign in to the cloud management panel",
-      "button": "Sign in"
+      "button": "Sign in",
+      "saved": "Credentials saved",
+      "saveCredentials": "Save credentials",
+      "editCredentials": "Edit credentials"
     },
     "offlinePanel": {
       "title": "Offline panel",
@@ -166,7 +169,10 @@
       "passwordChangeFailed": "Could not change the device password",
       "oldPasswordInvalid": "The current password is incorrect",
       "noDevices": "Add a device first",
-      "baseInfoReceived": "Base information received"
+      "baseInfoReceived": "Base information received",
+      "missingOnlineCredentials": "Save the online panel username and password first",
+      "onlineLoginFailed": "Could not sign in to the online panel",
+      "iframeNotAllowed": "The destination site does not allow in-app display or did not respond"
     }
   },
   "common": {

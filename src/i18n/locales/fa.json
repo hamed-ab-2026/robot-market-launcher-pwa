@@ -94,7 +94,10 @@
     "onlinePanel": {
       "title": "پنل آنلاین",
       "description": "ورود به پنل مدیریت ابری",
-      "button": "ورود"
+      "button": "ورود",
+      "saved": "اطلاعات ورود ذخیره شده",
+      "saveCredentials": "ثبت اطلاعات",
+      "editCredentials": "ویرایش اطلاعات"
     },
     "offlinePanel": {
       "title": "پنل آفلاین",
@@ -166,7 +169,10 @@
       "passwordChangeFailed": "تغییر رمز دستگاه انجام نشد",
       "oldPasswordInvalid": "رمز عبور فعلی صحیح نیست",
       "noDevices": "ابتدا یک دستگاه اضافه کنید",
-      "baseInfoReceived": "اطلاعات پایه دریافت شد"
+      "baseInfoReceived": "اطلاعات پایه دریافت شد",
+      "missingOnlineCredentials": "ابتدا نام کاربری و رمز عبور پنل آنلاین را ذخیره کنید",
+      "onlineLoginFailed": "ورود به پنل آنلاین انجام نشد",
+      "iframeNotAllowed": "سایت پذیرنده اجازه نمایش داخل برنامه را نمی‌دهد یا پاسخ‌گو نیست"
     }
   },
   "common": {

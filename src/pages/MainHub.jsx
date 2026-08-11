@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {
     Button,
@@ -44,11 +44,13 @@ import {
     getEditableDevice,
     getEditableOnlinePanel,
     loadDevices,
+    loadOnlinePanel,
     saveDevice,
     saveOnlinePanel
 } from
         "../services/hubStorage";
 
+const ONLINE_PANEL_URL = "https://panel.my-rm.com/login";
 const EMPTY_DEVICE = {
     name: "",
     serial: "",
@@ -88,9 +90,18 @@ export default function MainHub() {
     const [devices, setDevices] = useState(loadDevices);
     const [deviceModalOpen, setDeviceModalOpen] = useState(false);
     const [onlineModalOpen, setOnlineModalOpen] = useState(false);
+    const [activePanel, setActivePanel] = useState("offline");
+    const [hasOnlineCredentials, setHasOnlineCredentials] = useState(
+        () => Boolean(loadOnlinePanel().username)
+    );
     const [iframeDevice, setIframeDevice] = useState(null);
     const [editingDevice, setEditingDevice] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [onlineActionLoading, setOnlineActionLoading] = useState(null);
+    const [pendingOnlineOpenMode, setPendingOnlineOpenMode] = useState("iframe");
+    const [deviceActionLoading, setDeviceActionLoading] = useState({});
+    const [isFrameReady, setIsFrameReady] = useState(false);
+    const frameTimeoutRef = useRef(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -116,20 +127,94 @@ export default function MainHub() {
     }
 
 
-    /** فرم آنلاین را اعتبارسنجی، رمز را امن ذخیره و آداپتور موقت ورود ابری را اجرا می‌کند. */
+    /** فرم آنلاین را اعتبارسنجی و اطلاعات ورود را به‌صورت رمزنگاری‌شده ذخیره می‌کند. */
     async function handleOnlineLogin() {
         const values = await onlineForm.validateFields();
         setIsSaving(true);
         try {
             await saveOnlinePanel(values);
-            await loginToOnlinePanel(values);
+            setHasOnlineCredentials(true);
             message.success(t("hub.messages.credentialsSaved"));
             setOnlineModalOpen(false);
+            await startOnlineLogin(pendingOnlineOpenMode, values);
         } catch {
             message.error(t("hub.messages.saveFailed"));
         } finally {
             setIsSaving(false);
         }
+    }
+
+    async function requestOnlineOpen(openMode) {
+        setPendingOnlineOpenMode(openMode);
+        if (!hasOnlineCredentials) {
+            await openOnlineLogin();
+            return;
+        }
+        await startOnlineLogin(openMode);
+    }
+
+    /** از آداپتور API توکن ورود می‌گیرد و نشانی برگشتی را در حالت انتخاب‌شده باز می‌کند. */
+    async function startOnlineLogin(openMode, providedCredentials = null) {
+        let credentials = providedCredentials;
+        try {
+            credentials ||= await getEditableOnlinePanel();
+        } catch {
+            message.error(t("hub.messages.decryptFailed"));
+            return;
+        }
+
+        if (!credentials.username || !credentials.password) {
+            message.warning(t("hub.messages.missingOnlineCredentials"));
+            await openOnlineLogin();
+            return;
+        }
+
+        setOnlineActionLoading(openMode);
+        try {
+            const result = await loginToOnlinePanel(credentials);
+            if (!result?.ok) throw new Error("ONLINE_LOGIN_REJECTED");
+
+            const targetUrl = new URL(result.redirectUrl || ONLINE_PANEL_URL);
+            if (result.token) targetUrl.searchParams.set("token", result.token);
+
+            if (openMode === "iframe") {
+                setActivePanel("online");
+                setIsFrameReady(false);
+                setIframeDevice({
+                    name: t("hub.onlinePanel.title"),
+                    panelUrl: targetUrl.toString(),
+                    isOnlinePanel: true
+                });
+                beginFrameTimeout();
+            } else {
+                window.location.assign(targetUrl.toString());
+            }
+        } catch {
+            message.error(t("hub.messages.onlineLoginFailed"));
+        } finally {
+            setOnlineActionLoading(null);
+        }
+    }
+
+    function beginFrameTimeout() {
+        clearTimeout(frameTimeoutRef.current);
+        frameTimeoutRef.current = setTimeout(() => {
+            setIframeDevice(null);
+            setIsFrameReady(false);
+            message.error(t("hub.messages.iframeNotAllowed"));
+        }, 12_000);
+    }
+
+    function handlePanelFrameLoad() {
+        clearTimeout(frameTimeoutRef.current);
+        setIsFrameReady(true);
+    }
+
+    function handlePanelFrameError() {
+        clearTimeout(frameTimeoutRef.current);
+        setIframeDevice(null);
+        setIsFrameReady(false);
+        message.error(t("hub.messages.iframeNotAllowed"));
     }
 
 
@@ -291,6 +376,16 @@ export default function MainHub() {
         }
     }
 
+    async function runDeviceOpen(device, openMode) {
+        const key = `${device.id}:${openMode}`;
+        setDeviceActionLoading((current) => ({...current, [key]: true}));
+        try {
+            await loginThenOpenDevice(device, openMode);
+        } finally {
+            setDeviceActionLoading((current) => ({...current, [key]: false}));
+        }
+    }
+
     async function handleRequiredPasswordChange() {
         if (!passwordChangeContext) return;
 
@@ -356,7 +451,10 @@ export default function MainHub() {
         }
 
         if (openMode === "iframe") {
+            setActivePanel("offline");
+            setIsFrameReady(false);
             setIframeDevice({...device, panelUrl});
+            beginFrameTimeout();
         } else {
             window.location.assign(panelUrl);
         }
@@ -401,17 +499,15 @@ export default function MainHub() {
                     <Space size="middle" wrap={false}>
                         <Tooltip title={t("hub.actions.iframe")}>
                             <Button type="text" className="text-lg" icon={<DesktopOutlined/>}
-                                    onClick={() => confirmDeviceAction({
-                                        title: t("hub.actions.iframeConfirm"),
-                                        action: () => loginThenOpenDevice(device, "iframe")
-                                    })}/>
+                                    loading={deviceActionLoading[`${device.id}:iframe`]}
+                                    disabled={deviceActionLoading[`${device.id}:direct`]}
+                                    onClick={() => runDeviceOpen(device, "iframe")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.direct")}>
                             <Button type="text" className="text-lg" icon={<LinkOutlined/>}
-                                    onClick={() => confirmDeviceAction({
-                                        title: t("hub.actions.directConfirm"),
-                                        action: () => loginThenOpenDevice(device, "direct")
-                                    })}/>
+                                    loading={deviceActionLoading[`${device.id}:direct`]}
+                                    disabled={deviceActionLoading[`${device.id}:iframe`]}
+                                    onClick={() => runDeviceOpen(device, "direct")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.advancedSettings")}>
                             <Button type="text" className="text-lg" icon={<SettingOutlined/>}
@@ -420,7 +516,7 @@ export default function MainHub() {
                     </Space>
 
             }],
-        [t]);
+        [t, deviceActionLoading]);
 
     return (
         <div className="min-h-screen bg-surface-light pb-10 dark:bg-surface-dark">
@@ -446,7 +542,6 @@ export default function MainHub() {
                     <div className="hidden md:block"><PersianDateTime/></div>
                     <Button
                         className="hidden sm:inline-flex"
-                        icon={<InfoCircleOutlined/>}
                         loading={isRefreshing}
                         onClick={refreshBaseInformation}>
 
@@ -459,6 +554,15 @@ export default function MainHub() {
 
             <main className="mx-auto  max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
 
+                <Button
+                    block
+                    className="sm:hidden"
+                    loading={isRefreshing}
+                    onClick={refreshBaseInformation}>
+
+                    {t("hub.receiveBaseInfo")}
+                </Button>
+
                 <CollapsibleSection
                     icon={<PlayCircleOutlined/>}
                     title={t("hub.tutorial.title")}
@@ -469,17 +573,6 @@ export default function MainHub() {
                         )}
                     </Carousel>
                 </CollapsibleSection>
-
-
-                <Button
-                    block
-                    className="sm:hidden"
-                    icon={<InfoCircleOutlined/>}
-                    loading={isRefreshing}
-                    onClick={refreshBaseInformation}>
-
-                    {t("hub.receiveBaseInfo")}
-                </Button>
 
                 <CollapsibleSection
                     icon={<AppstoreOutlined/>}
@@ -502,63 +595,120 @@ export default function MainHub() {
                     icon={<ApiOutlined/>}
                     title={t("hub.deviceManagement.title")}
                     description={t("hub.deviceManagement.description")}>
-                    <div className="grid gap-4 p-4 lg:grid-cols-2 sm:p-5">
-                        <PanelCard
-                            icon={<CloudOutlined/>}
-                            title={t("hub.onlinePanel.title")}
-                            description={t("hub.onlinePanel.description")}
-                            buttonText={t("hub.onlinePanel.button")}
-                            onClick={openOnlineLogin}/>
-                        <PanelCard
-                            icon={<ApiOutlined/>}
-                            title={t("hub.offlinePanel.title")}
-                            description={t("hub.offlinePanel.description")}
-                            buttonText={t("hub.addDevice")}
-                            onClick={openAddDevice}/>
+                    <div className="flex justify-center border-b border-slate-100 p-4 dark:border-slate-800 sm:p-5">
+                        <Radio.Group
+                            value={activePanel}
+                            buttonStyle="solid"
+                            onChange={(event) => setActivePanel(event.target.value)}>
+                            <Radio.Button value="online">
+                                <CloudOutlined className="me-2"/>
+                                {t("hub.onlinePanel.title")}
+                            </Radio.Button>
+                            <Radio.Button value="offline">
+                                <ApiOutlined className="me-2"/>
+                                {t("hub.offlinePanel.title")}
+                            </Radio.Button>
+                        </Radio.Group>
                     </div>
-                    <div className="border-t border-slate-100 dark:border-slate-800">
+
+                    {activePanel === "online" ?
                         <div className="p-4 sm:p-5">
-                            <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
-                        </div>
-                        <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
-                               tableLayout="fixed"
-                               scroll={{x: 332}}
-                               locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
-                    </div>
+                            <article
+                                className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                                <div
+                                    className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                                    <CloudOutlined/>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
+                                    {hasOnlineCredentials &&
+                                        <Tag className="mt-2" color="green">{t("hub.onlinePanel.saved")}</Tag>}
+                                </div>
+                                <Space direction="vertical" size="small">
+                                    <Button type="primary" icon={<DesktopOutlined/>}
+                                            loading={onlineActionLoading === "iframe"}
+                                            disabled={onlineActionLoading === "direct"}
+                                            onClick={() => requestOnlineOpen("iframe")}>
+                                        {t("hub.actions.iframe")}
+                                    </Button>
+                                    <Button icon={<LinkOutlined/>}
+                                            loading={onlineActionLoading === "direct"}
+                                            disabled={onlineActionLoading === "iframe"}
+                                            onClick={() => requestOnlineOpen("direct")}>
+                                        {t("hub.actions.direct")}
+                                    </Button>
+                                    {hasOnlineCredentials &&
+                                        <Button type="link" icon={<EditOutlined/>} onClick={openOnlineLogin}>
+                                            {t("hub.onlinePanel.editCredentials")}
+                                        </Button>
+                                    }
+                                </Space>
+                            </article>
+                        </div> :
+                        <>
+                            <div className="p-4 sm:p-5">
+                                <PanelCard
+                                    icon={<ApiOutlined/>}
+                                    title={t("hub.offlinePanel.title")}
+                                    description={t("hub.offlinePanel.description")}
+                                    buttonText={t("hub.addDevice")}
+                                    onClick={openAddDevice}/>
+                            </div>
+                            <div className="border-t border-slate-100 dark:border-slate-800">
+                                <div className="p-4 sm:p-5">
+                                    <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
+                                </div>
+                                <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
+                                       tableLayout="fixed"
+                                       scroll={{x: 332}}
+                                       locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
+                            </div>
+                        </>}
+
+                    {iframeDevice &&
+                        ((activePanel === "online" && iframeDevice.isOnlinePanel) ||
+                            (activePanel === "offline" && !iframeDevice.isOnlinePanel)) &&
+                        <section
+                            className="overflow-hidden border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                            <div
+                                className="flex items-center justify-between gap-3 border-b border-slate-200 p-4 dark:border-slate-700">
+                                <div className="min-w-0">
+                                    <h2 className="truncate font-semibold text-slate-800 dark:text-white">{iframeDevice.name}</h2>
+                                    <p className="truncate text-xs text-slate-400" dir="ltr">
+                                        {iframeDevice.panelUrl || buildDeviceBaseUrl(iframeDevice)}
+                                    </p>
+                                </div>
+                                <Button onClick={() => setIframeDevice(null)}>{t("common.close")}</Button>
+                            </div>
+                            <iframe
+                                id={iframeDevice.isOnlinePanel ? "online-panel-frame" : undefined}
+                                src={iframeDevice.panelUrl || buildDeviceBaseUrl(iframeDevice)}
+                                title={iframeDevice.name}
+                                onLoad={handlePanelFrameLoad}
+                                onError={handlePanelFrameError}
+                                className={isFrameReady ?
+                                    "block h-[65vh] min-h-[420px] w-full bg-white" :
+                                    "invisible h-0 w-full"}/>
+                            {!isFrameReady &&
+                                <div className="flex min-h-[220px] items-center justify-center text-slate-500">
+                                    {t("common.loading")}
+                                </div>}
+                        </section>}
                 </CollapsibleSection>
 
                 <div className="md:hidden "><PersianDateTime/></div>
 
-
-                {iframeDevice &&
-                    <section
-                        className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                        <div
-                            className="flex items-center justify-between gap-3 border-b border-slate-200 p-4 dark:border-slate-700">
-                            <div className="min-w-0">
-                                <h2 className="truncate font-semibold text-slate-800 dark:text-white">{iframeDevice.name}</h2>
-                                <p className="truncate text-xs text-slate-400"
-                                   dir="ltr">{buildDeviceBaseUrl(iframeDevice)}</p>
-                            </div>
-                            <Button onClick={() => setIframeDevice(null)}>{t("common.close")}</Button>
-                        </div>
-                        <iframe
-                            src={iframeDevice.panelUrl || buildDeviceBaseUrl(iframeDevice)}
-                            title={iframeDevice.name}
-                            className="h-[65vh] min-h-[420px] w-full bg-white"/>
-
-                    </section>
-                }
             </main>
 
-            <button
-                type="button"
-                aria-label={t("hub.support.open")}
-                onClick={() => setChatOpen(true)}
-                className="fixed bottom-6 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">
-                <MessageOutlined/>
-            </button>
+            {/*<button*/}
+            {/*    type="button"*/}
+            {/*    aria-label={t("hub.support.open")}*/}
+            {/*    onClick={() => setChatOpen(true)}*/}
+            {/*    className="fixed bottom-6 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">*/}
+            {/*    <MessageOutlined/>*/}
+            {/*</button>*/}
 
             <Modal title={t("hub.support.title")} open={chatOpen} footer={null}
                    onCancel={() => setChatOpen(false)}>
