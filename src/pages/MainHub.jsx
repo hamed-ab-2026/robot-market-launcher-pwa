@@ -60,11 +60,21 @@ const EMPTY_DEVICE = {
 };
 const MIN_NEW_PASSWORD_LENGTH = 8;
 
+
 // هر آیتم بعداً می‌تواند با شناسه یا نشانی embed یک ویدیوی آپارات جایگزین شود.
 const TUTORIAL_SLIDES = [
-    {id: "tutorial-1", aparatUrl: ""},
-    {id: "tutorial-2", aparatUrl: ""},
-    {id: "tutorial-3", aparatUrl: ""}
+    {
+        id: "tutorial-1",
+        aparatUrl: "https://www.aparat.com/video/video/embed/videohash/i58zd9s/vt/frame"
+    },
+    {
+        id: "tutorial-2",
+        aparatUrl: "https://www.aparat.com/video/video/embed/videohash/i58zd9s/vt/frame"
+    },
+    {
+        id: "tutorial-3",
+        aparatUrl: "https://www.aparat.com/video/video/embed/videohash/i58zd9s/vt/frame"
+    }
 ];
 
 
@@ -447,19 +457,19 @@ export default function MainHub() {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
+            <main className="mx-auto  max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
+
                 <CollapsibleSection
                     icon={<PlayCircleOutlined/>}
                     title={t("hub.tutorial.title")}
                     description={t("hub.tutorial.description")}>
-                    <Carousel arrows dots>
+                    <Carousel arrows dots draggable={false} infinite={false}>
                         {TUTORIAL_SLIDES.map((slide, index) =>
                             <TutorialSlide key={slide.id} slide={slide} index={index} t={t}/>
                         )}
                     </Carousel>
                 </CollapsibleSection>
 
-                <div className="md:hidden"><PersianDateTime/></div>
 
                 <Button
                     block
@@ -476,8 +486,9 @@ export default function MainHub() {
                     title={t("hub.usefulApps.title")}
                     description={t("hub.usefulApps.description")}>
                     <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
-                        {[1, 2, 3,4].map((item) =>
-                            <div key={item} className="rounded-2xl border border-dashed border-slate-300 p-5 text-center dark:border-slate-700">
+                        {[1, 2, 3, 4].map((item) =>
+                            <div key={item}
+                                 className="rounded-2xl border border-dashed border-slate-300 p-5 text-center dark:border-slate-700">
                                 <AppstoreOutlined className="text-3xl text-brand-500"/>
                                 <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                     {t("hub.usefulApps.placeholder", {number: item})}
@@ -517,6 +528,9 @@ export default function MainHub() {
                     </div>
                 </CollapsibleSection>
 
+                <div className="md:hidden "><PersianDateTime/></div>
+
+
                 {iframeDevice &&
                     <section
                         className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -553,7 +567,8 @@ export default function MainHub() {
                         <Empty description={t("hub.support.empty")}/> :
                         <div className="space-y-3">
                             {chatMessages.map((item) =>
-                                <div key={item.id} className="ms-auto max-w-[85%] rounded-2xl rounded-ee-sm bg-brand-500 px-4 py-2 text-sm text-white">
+                                <div key={item.id}
+                                     className="ms-auto max-w-[85%] rounded-2xl rounded-ee-sm bg-brand-500 px-4 py-2 text-sm text-white">
                                     {item.text}
                                 </div>
                             )}
@@ -738,11 +753,13 @@ function CollapsibleSection({icon, title, description, children}) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <section className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <section
+            className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <button type="button" onClick={() => setIsOpen((current) => !current)}
                     aria-expanded={isOpen}
                     className="flex w-full items-center gap-3 p-4 text-start sm:p-5">
-                <span className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                <span
+                    className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
                     {icon}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -760,14 +777,22 @@ function CollapsibleSection({icon, title, description, children}) {
 function TutorialSlide({slide, index, t}) {
     if (slide.aparatUrl) {
         return (
-            <iframe src={slide.aparatUrl} title={t("hub.tutorial.slideTitle", {number: index + 1})}
-                    allow="autoplay; fullscreen" allowFullScreen
-                    className="aspect-video w-full bg-slate-950"/>
+            <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
+                <iframe
+                    src={slide.aparatUrl}
+                    title={t("hub.tutorial.slideTitle", {number: index + 1})}
+                    loading="eager"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full border-0"/>
+            </div>
         );
     }
 
     return (
-        <div className="flex aspect-video max-h-[520px] w-full flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center text-slate-300">
+        <div
+            className="flex aspect-video max-h-[520px] w-full flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center text-slate-300">
             <PlayCircleOutlined className="text-5xl text-brand-400"/>
             <p className="font-semibold">{t("hub.tutorial.slideTitle", {number: index + 1})}</p>
             <p className="max-w-lg text-sm">{t("hub.tutorial.placeholder")}</p>
