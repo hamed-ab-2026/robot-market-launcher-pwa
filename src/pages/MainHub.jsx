@@ -9,7 +9,6 @@ import {
     message,
     Modal,
     Radio,
-    Select,
     Space,
     Table,
     Tag,
@@ -40,10 +39,8 @@ import PersianDateTime from "../components/common/PersianDateTime";
 import {useConnectivityStatus} from "../hooks/useConnectivityStatus";
 import {
     buildDeviceBaseUrl,
-    fetchDeviceInfoByIp,
-    fetchDeviceInfoBySerial,
-    fetchDeviceTypes,
-    loginToOnlinePanel
+    loginToOnlinePanel,
+    resolveDeviceInfo
 } from "../services/deviceApi";
 import {
     deleteDevice,
@@ -59,7 +56,6 @@ import {
 
 const ONLINE_PANEL_URL = "https://panel.my-rm.com/login";
 const EMPTY_DEVICE = {
-    deviceTypeId: undefined,
     serial: "",
     installationLocation: "",
     type: "",
@@ -101,7 +97,6 @@ export default function MainHub() {
     const [devices, setDevices] = useState(loadDevices);
     const [deviceModalOpen, setDeviceModalOpen] = useState(false);
     const [onlineModalOpen, setOnlineModalOpen] = useState(false);
-    const [activePanel, setActivePanel] = useState("offline");
     const [hasOnlineCredentials, setHasOnlineCredentials] = useState(
         () => Boolean(loadOnlinePanel().username)
     );
@@ -114,11 +109,12 @@ export default function MainHub() {
     const [isFrameReady, setIsFrameReady] = useState(false);
     const frameTimeoutRef = useRef(null);
     const reloadScheduledRef = useRef(false);
+    const deviceQueryRunningRef = useRef(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isQueryingSerial, setIsQueryingSerial] = useState(false);
+    const [isQueryingAllDevices, setIsQueryingAllDevices] = useState(false);
     const [deviceStatuses, setDeviceStatuses] = useState({});
-    const [deviceTypes, setDeviceTypes] = useState([]);
-    const [isLoadingDeviceTypes, setIsLoadingDeviceTypes] = useState(false);
+    const [activeHubSection, setActiveHubSection] = useState("devices");
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [advancedDevice, setAdvancedDevice] = useState(null);
@@ -130,69 +126,78 @@ export default function MainHub() {
     const [changePasswordForm] = Form.useForm();
 
 
-    useEffect(() => {
-        let cancelled = false;
+    async function queryAllDevices({showResult = false} = {}) {
+        if (deviceQueryRunningRef.current) return;
 
-        async function checkAllDevices() {
-            const storedDevices = loadDevices();
-            if (!storedDevices.length) return;
-
-            setDeviceStatuses((current) => ({
-                ...current,
-                ...Object.fromEntries(storedDevices.map((device) => [device.id, "checking"]))
-            }));
-
-            await Promise.allSettled(storedDevices.map(async (device) => {
-                let currentIp = device.ipAddress;
-
-                if (device.serial) {
-                    try {
-                        const discovered = await fetchDeviceInfoBySerial(device.serial);
-                        currentIp = discovered.ipAddress || currentIp;
-                        const ipHasChanged = Boolean(
-                            device.ipAddress && discovered.ipAddress && device.ipAddress !== discovered.ipAddress
-                        );
-                        updateDeviceMetadata(device.id, {
-                            ipAddress: currentIp,
-                            type: discovered.type || device.type,
-                            plateSerial: discovered.plateSerial || device.plateSerial,
-                            lastIpCheckAt: new Date().toISOString(),
-                            lastIpCheckStatus: "success"
-                        });
-
-                        if (ipHasChanged && !reloadScheduledRef.current) {
-                            reloadScheduledRef.current = true;
-                            message.info(t("hub.messages.deviceIpChanged", {name: device.name}), 2.5);
-                            window.setTimeout(() => window.location.reload(), IP_CHANGE_RELOAD_DELAY_MS);
-                        }
-                    } catch {
-                        updateDeviceMetadata(device.id, {
-                            lastIpCheckAt: new Date().toISOString(),
-                            lastIpCheckStatus: "failed"
-                        });
-                    }
-                }
-
-                try {
-                    if (!currentIp) throw new Error("DEVICE_IP_MISSING");
-                    await fetchDeviceInfoByIp(currentIp);
-                    if (!cancelled) {
-                        setDeviceStatuses((current) => ({...current, [device.id]: "active"}));
-                    }
-                } catch {
-                    if (!cancelled) {
-                        setDeviceStatuses((current) => ({...current, [device.id]: "inactive"}));
-                    }
-                }
-            }));
-
-            if (!cancelled) setDevices(loadDevices());
+        const storedDevices = loadDevices();
+        if (!storedDevices.length) {
+            if (showResult) message.info(t("hub.messages.noDevices"));
+            return;
         }
 
-        checkAllDevices();
-        const interval = window.setInterval(checkAllDevices, DEVICE_STATUS_INTERVAL_MS);
+        deviceQueryRunningRef.current = true;
+        if (showResult) setIsQueryingAllDevices(true);
+        setDeviceStatuses((current) => ({
+            ...current,
+            ...Object.fromEntries(storedDevices.map((device) => [device.id, "checking"]))
+        }));
+
+        try {
+            const results = await Promise.all(storedDevices.map(async (device) => {
+                try {
+                    const discovered = await resolveDeviceInfo({
+                        serial: device.serial,
+                        ipAddress: device.ipAddress
+                    });
+                    const currentIp = discovered.ipAddress || device.ipAddress;
+                    const ipHasChanged = Boolean(
+                        device.ipAddress && currentIp && device.ipAddress !== currentIp
+                    );
+                    updateDeviceMetadata(device.id, {
+                        name: discovered.type || device.name || device.serial,
+                        installationLocation: discovered.installationLocation || device.installationLocation,
+                        ipAddress: currentIp,
+                        type: discovered.type || device.type,
+                        plateSerial: discovered.plateSerial || device.plateSerial,
+                        lastIpCheckAt: new Date().toISOString(),
+                        lastIpCheckStatus: "success"
+                    });
+
+                    if (ipHasChanged && !reloadScheduledRef.current) {
+                        reloadScheduledRef.current = true;
+                        message.info(t("hub.messages.deviceIpChanged", {name: device.name || device.serial}), 2.5);
+                        window.setTimeout(() => window.location.reload(), IP_CHANGE_RELOAD_DELAY_MS);
+                    }
+                    setDeviceStatuses((current) => ({...current, [device.id]: "active"}));
+                    return true;
+                } catch {
+                    updateDeviceMetadata(device.id, {
+                        lastIpCheckAt: new Date().toISOString(),
+                        lastIpCheckStatus: "failed"
+                    });
+                    setDeviceStatuses((current) => ({...current, [device.id]: "inactive"}));
+                    return false;
+                }
+            }));
+
+            setDevices(loadDevices());
+            if (showResult && !reloadScheduledRef.current) {
+                message.success(t("hub.messages.devicesQueried", {
+                    active: results.filter(Boolean).length,
+                    total: results.length
+                }));
+            }
+        } finally {
+            deviceQueryRunningRef.current = false;
+            if (showResult) setIsQueryingAllDevices(false);
+        }
+    }
+
+
+    useEffect(() => {
+        queryAllDevices();
+        const interval = window.setInterval(() => queryAllDevices(), DEVICE_STATUS_INTERVAL_MS);
         return () => {
-            cancelled = true;
             window.clearInterval(interval);
         };
     }, [t]);
@@ -258,7 +263,6 @@ export default function MainHub() {
             if (result.token) targetUrl.searchParams.set("token", result.token);
 
             if (openMode === "iframe") {
-                setActivePanel("online");
                 setIsFrameReady(false);
                 setIframeDevice({
                     name: t("hub.onlinePanel.title"),
@@ -304,20 +308,6 @@ export default function MainHub() {
         deviceForm.resetFields();
         deviceForm.setFieldsValue(EMPTY_DEVICE);
         setDeviceModalOpen(true);
-        loadDeviceTypes();
-    }
-
-
-    async function loadDeviceTypes() {
-        setIsLoadingDeviceTypes(true);
-        try {
-            setDeviceTypes(await fetchDeviceTypes());
-        } catch {
-            setDeviceTypes([]);
-            message.error(t("hub.messages.deviceTypesFailed"));
-        } finally {
-            setIsLoadingDeviceTypes(false);
-        }
     }
 
 
@@ -328,7 +318,6 @@ export default function MainHub() {
             const editableDevice = await getEditableDevice(device);
             deviceForm.setFieldsValue(editableDevice);
             setDeviceModalOpen(true);
-            loadDeviceTypes();
         } catch {
             message.error(t("hub.messages.decryptFailed"));
         }
@@ -336,12 +325,13 @@ export default function MainHub() {
 
 
     async function queryDeviceBySerial({showSuccessMessage = true} = {}) {
-        const {serial} = await deviceForm.validateFields(["serial"]);
+        const {serial, ipAddress} = await deviceForm.validateFields(["serial", "ipAddress"]);
         setIsQueryingSerial(true);
         try {
-            const deviceInfo = await fetchDeviceInfoBySerial(serial);
+            const deviceInfo = await resolveDeviceInfo({serial, ipAddress});
             if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
             deviceForm.setFieldsValue({
+                installationLocation: deviceInfo.installationLocation,
                 ipAddress: deviceInfo.ipAddress,
                 type: deviceInfo.type,
                 plateSerial: deviceInfo.plateSerial
@@ -361,11 +351,10 @@ export default function MainHub() {
         const values = await deviceForm.validateFields();
         setIsSaving(true);
         try {
-            const selectedType = deviceTypes.find((item) => item.id === values.deviceTypeId);
             const candidate = {
                 ...editingDevice,
                 ...values,
-                name: selectedType?.name || editingDevice?.name || ""
+                name: editingDevice?.name || values.serial
             };
 
             const savedDevice = await saveDevice(candidate);
@@ -374,10 +363,12 @@ export default function MainHub() {
             setDeviceModalOpen(false);
             message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));
 
-            fetchDeviceInfoBySerial(savedDevice.serial)
+            resolveDeviceInfo({serial: savedDevice.serial, ipAddress: savedDevice.ipAddress})
                 .then(async (deviceInfo) => {
                     if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
                     updateDeviceMetadata(savedDevice.id, {
+                        name: deviceInfo.type || savedDevice.name || savedDevice.serial,
+                        installationLocation: deviceInfo.installationLocation || savedDevice.installationLocation,
                         ipAddress: deviceInfo.ipAddress,
                         type: deviceInfo.type || savedDevice.type,
                         plateSerial: deviceInfo.plateSerial || savedDevice.plateSerial,
@@ -385,24 +376,13 @@ export default function MainHub() {
                         lastIpCheckStatus: "success"
                     });
                     setDevices(loadDevices());
-                    await fetchDeviceInfoByIp(deviceInfo.ipAddress);
                     setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
                 })
-                .catch(async () => {
+                .catch(() => {
                     updateDeviceMetadata(savedDevice.id, {
                         lastIpCheckAt: new Date().toISOString(),
                         lastIpCheckStatus: "failed"
                     });
-
-                    if (savedDevice.ipAddress) {
-                        try {
-                            await fetchDeviceInfoByIp(savedDevice.ipAddress);
-                            setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
-                            return;
-                        } catch {
-                            // وضعیت در ادامه غیرفعال می‌شود.
-                        }
-                    }
 
                     setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"}));
                     message.warning(t("hub.messages.deviceRegisteredQueryFailed"));
@@ -607,7 +587,6 @@ export default function MainHub() {
         }
 
         if (openMode === "iframe") {
-            setActivePanel("offline");
             setIsFrameReady(false);
             setIframeDevice({...device, panelUrl});
             beginFrameTimeout();
@@ -655,13 +634,15 @@ export default function MainHub() {
                         <Tooltip title={t("hub.actions.iframe")}>
                             <Button type="text" className="text-lg" icon={<DesktopOutlined/>}
                                     loading={deviceActionLoading[`${device.id}:iframe`]}
-                                    disabled={deviceActionLoading[`${device.id}:direct`]}
+                                    disabled={deviceStatuses[device.id] !== "active" ||
+                                        deviceActionLoading[`${device.id}:direct`]}
                                     onClick={() => runDeviceOpen(device, "iframe")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.direct")}>
                             <Button type="text" className="text-lg" icon={<LinkOutlined/>}
                                     loading={deviceActionLoading[`${device.id}:direct`]}
-                                    disabled={deviceActionLoading[`${device.id}:iframe`]}
+                                    disabled={deviceStatuses[device.id] !== "active" ||
+                                        deviceActionLoading[`${device.id}:iframe`]}
                                     onClick={() => runDeviceOpen(device, "direct")}/>
                         </Tooltip>
                         <Tooltip title={t("hub.actions.advancedSettings")}>
@@ -718,7 +699,19 @@ export default function MainHub() {
                     {t("hub.receiveBaseInfo")}
                 </Button>
 
-                <CollapsibleSection
+                <div className="overflow-x-auto rounded-2xl bg-white p-2 shadow-sm dark:bg-slate-900">
+                    <Radio.Group
+                        value={activeHubSection}
+                        buttonStyle="solid"
+                        onChange={(event) => setActiveHubSection(event.target.value)}
+                        className="flex min-w-max">
+                        <Radio.Button value="devices"><ApiOutlined className="me-2"/>{t("hub.deviceManagement.title")}</Radio.Button>
+                        <Radio.Button value="apps"><AppstoreOutlined className="me-2"/>{t("hub.usefulApps.title")}</Radio.Button>
+                        <Radio.Button value="tutorial"><PlayCircleOutlined className="me-2"/>{t("hub.tutorial.title")}</Radio.Button>
+                    </Radio.Group>
+                </div>
+
+                {activeHubSection === "tutorial" && <StaticSection
                     icon={<PlayCircleOutlined/>}
                     title={t("hub.tutorial.title")}
                     description={t("hub.tutorial.description")}>
@@ -727,9 +720,9 @@ export default function MainHub() {
                             <TutorialSlide key={slide.id} slide={slide} index={index} t={t}/>
                         )}
                     </Carousel>
-                </CollapsibleSection>
+                </StaticSection>}
 
-                <CollapsibleSection
+                {activeHubSection === "apps" && <StaticSection
                     icon={<AppstoreOutlined/>}
                     title={t("hub.usefulApps.title")}
                     description={t("hub.usefulApps.description")}>
@@ -744,31 +737,14 @@ export default function MainHub() {
                             </div>
                         )}
                     </div>
-                </CollapsibleSection>
+                </StaticSection>}
 
-                <CollapsibleSection
+                {activeHubSection === "devices" && <StaticSection
                     icon={<ApiOutlined/>}
                     title={t("hub.deviceManagement.title")}
                     description={t("hub.deviceManagement.description")}>
-                    <div className="flex justify-center border-b border-slate-100 p-4 dark:border-slate-800 sm:p-5">
-                        <Radio.Group
-                            value={activePanel}
-                            buttonStyle="solid"
-                            onChange={(event) => setActivePanel(event.target.value)}>
-                            <Radio.Button value="online">
-                                <CloudOutlined className="me-2"/>
-                                {t("hub.onlinePanel.title")}
-                            </Radio.Button>
-                            <Radio.Button value="offline">
-                                <ApiOutlined className="me-2"/>
-                                {t("hub.offlinePanel.title")}
-                            </Radio.Button>
-                        </Radio.Group>
-                    </div>
-
-                    {activePanel === "online" ?
-                        <div className="p-4 sm:p-5">
-                            <article
+                    <div className="p-4 sm:p-5">
+                             <article
                                 className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                                 <div
                                     className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
@@ -800,32 +776,31 @@ export default function MainHub() {
                                     }
                                 </Space>
                             </article>
-                        </div> :
-                        <>
-                            <div className="p-4 sm:p-5">
-                                <PanelCard
+                    </div>
+                    <div className="border-t border-slate-100 p-4 dark:border-slate-800 sm:p-5">
+                                 <PanelCard
                                     icon={<ApiOutlined/>}
                                     title={t("hub.offlinePanel.title")}
                                     description={t("hub.offlinePanel.description")}
                                     buttonText={t("hub.addDevice")}
-                                    onClick={openAddDevice}/>
-                            </div>
-                            <div className="border-t border-slate-100 dark:border-slate-800">
+                                    onClick={openAddDevice}
+                                    secondaryButtonText={t("hub.queryDevices")}
+                                    secondaryLoading={isQueryingAllDevices}
+                                    onSecondaryClick={() => queryAllDevices({showResult: true})}/>
+                    </div>
+                    <div className="border-t border-slate-100 dark:border-slate-800">
                                 <div className="p-4 sm:p-5">
                                     <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
                                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
                                 </div>
-                                <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
+                        <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
                                        tableLayout="fixed"
                                        scroll={{x: 422}}
-                                       locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
-                            </div>
-                        </>}
+                               locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
+                    </div>
 
                     {iframeDevice &&
-                        ((activePanel === "online" && iframeDevice.isOnlinePanel) ||
-                            (activePanel === "offline" && !iframeDevice.isOnlinePanel)) &&
-                        <section
+                         <section
                             className="overflow-hidden border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
                             <div
                                 className="flex items-center justify-between gap-3 border-b border-slate-200 p-4 dark:border-slate-700">
@@ -851,7 +826,7 @@ export default function MainHub() {
                                     {t("common.loading")}
                                 </div>}
                         </section>}
-                </CollapsibleSection>
+                </StaticSection>}
 
                 <div className="md:hidden "><PersianDateTime/></div>
 
@@ -996,15 +971,6 @@ export default function MainHub() {
 
                 <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
                     <Form.Item
-                        name="deviceTypeId"
-                        label={t("hub.fields.deviceType")}
-                        rules={[{required: true, message: t("hub.deviceForm.deviceTypeRequired")}]}>
-                        <Select
-                            loading={isLoadingDeviceTypes}
-                            placeholder={t("hub.placeholders.deviceType")}
-                            options={deviceTypes.map((item) => ({value: item.id, label: item.name}))}/>
-                    </Form.Item>
-                    <Form.Item
                         label={t("hub.fields.serial")}>
                         <Space.Compact block>
                             <Form.Item name="serial" noStyle rules={[{required: true}]}>
@@ -1048,7 +1014,16 @@ export default function MainHub() {
 
 
 /** کارت معرفی مشترک پنل آنلاین و آفلاین را رندر می‌کند تا ساختار و ظاهر آن‌ها تکرار نشود. */
-function PanelCard({icon, title, description, buttonText, onClick}) {
+function PanelCard({
+    icon,
+    title,
+    description,
+    buttonText,
+    onClick,
+    secondaryButtonText,
+    secondaryLoading,
+    onSecondaryClick
+}) {
     return (
         <article
             className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -1060,21 +1035,23 @@ function PanelCard({icon, title, description, buttonText, onClick}) {
                 <h2 className="font-bold text-slate-800 dark:text-white">{title}</h2>
                 <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
             </div>
-            <Button type="primary" onClick={onClick}>{buttonText}</Button>
+            <Space wrap>
+                {secondaryButtonText &&
+                    <Button icon={<ReloadOutlined/>} loading={secondaryLoading} onClick={onSecondaryClick}>
+                        {secondaryButtonText}
+                    </Button>}
+                <Button type="primary" onClick={onClick}>{buttonText}</Button>
+            </Space>
         </article>);
 
 }
 
-/** یک سکشن جمع‌شونده می‌سازد که در شروع بسته است و محتوای سنگین را فقط هنگام بازشدن نمایش می‌دهد. */
-function CollapsibleSection({icon, title, description, children}) {
-    const [isOpen, setIsOpen] = useState(false);
-
+/** قاب ثابت نمای انتخاب‌شده را همراه عنوان و توضیح آن نمایش می‌دهد. */
+function StaticSection({icon, title, description, children}) {
     return (
         <section
             className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <button type="button" onClick={() => setIsOpen((current) => !current)}
-                    aria-expanded={isOpen}
-                    className="flex w-full items-center gap-3 p-4 text-start sm:p-5">
+            <div className="flex w-full items-center gap-3 p-4 text-start sm:p-5">
                 <span
                     className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
                     {icon}
@@ -1083,9 +1060,8 @@ function CollapsibleSection({icon, title, description, children}) {
                     <span className="block font-bold text-slate-800 dark:text-white">{title}</span>
                     <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{description}</span>
                 </span>
-                <span className={`text-xl text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`}>⌄</span>
-            </button>
-            {isOpen && <div className="border-t border-slate-100 dark:border-slate-800">{children}</div>}
+            </div>
+            <div className="border-t border-slate-100 dark:border-slate-800">{children}</div>
         </section>
     );
 }

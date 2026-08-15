@@ -81,12 +81,12 @@
       "title": "تنظیمات پیشرفته دستگاه"
     },
     "placeholders": {
-      "deviceType": "نوع دستگاه را انتخاب کنید",
       "installationLocation": "مثلاً سالن پذیرش (اختیاری)",
       "username": "نام کاربری را وارد کنید",
       "password": "رمز عبور را وارد کنید"
     },
     "receiveBaseInfo": "دریافت اطلاعات پایه",
+    "queryDevices": "استعلام دستگاه‌ها",
     "deviceList": "دستگاه‌های آفلاین",
     "deviceListDescription": "مدیریت ربات‌های محلی و ورود به پنل کنترل آن‌ها",
     "addDevice": "افزودن دستگاه",
@@ -129,7 +129,6 @@
     "fields": {
       "username": "نام کاربری",
       "password": "رمز عبور",
-      "deviceType": "نوع دستگاه",
       "serial": "شماره سریال پلاک دستگاه",
       "ipAddress": "آدرس IP",
       "installationLocation": "محل نصب"
@@ -143,7 +142,6 @@
       "addTitle": "افزودن دستگاه",
       "editTitle": "ویرایش دستگاه",
       "query": "استعلام",
-      "deviceTypeRequired": "انتخاب نوع دستگاه الزامی است",
       "ipHint": "اگر IP دستگاه را می‌دانید، آن را وارد کنید.",
       "ipInvalid": "فرمت IP صحیح نیست"
     },
@@ -167,9 +165,9 @@
       "deviceDeleted": "دستگاه حذف شد",
       "deviceQuerySuccess": "IP و اطلاعات دستگاه دریافت شد",
       "deviceQueryFailed": "استعلام دستگاه انجام نشد؛ شماره سریال و شبکه را بررسی کنید",
-      "deviceTypesFailed": "دریافت لیست انواع دستگاه انجام نشد",
       "deviceRegisteredQueryFailed": "دستگاه ثبت شد، اما استعلام IP آن انجام نشد؛ بعداً دوباره بررسی می‌شود",
       "deviceIpChanged": "IP دستگاه «{{name}}» تغییر کرده است؛ صفحه در حال به‌روزرسانی است",
+      "devicesQueried": "استعلام {{total}} دستگاه انجام شد؛ {{active}} دستگاه فعال است",
       "connectionFailed": "ارتباط با دستگاه برقرار نشد",
       "loginFailed": "ورود به پنل دستگاه انجام نشد",
       "missingCredentials": "برای ورود خودکار، نام کاربری و رمز عبور را در اطلاعات دستگاه ثبت کنید. پنل برای ورود دستی باز شد.",

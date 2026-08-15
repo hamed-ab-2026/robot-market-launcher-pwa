@@ -81,12 +81,12 @@
       "title": "Advanced device settings"
     },
     "placeholders": {
-      "deviceType": "Select a device type",
       "installationLocation": "For example: Reception hall (optional)",
       "username": "Enter the username",
       "password": "Enter the password"
     },
     "receiveBaseInfo": "Receive base information",
+    "queryDevices": "Query devices",
     "deviceList": "Offline devices",
     "deviceListDescription": "Manage local robots and open their control panels",
     "addDevice": "Add device",
@@ -129,7 +129,6 @@
     "fields": {
       "username": "Username",
       "password": "Password",
-      "deviceType": "Device type",
       "serial": "Device serial / plate number",
       "ipAddress": "IP address",
       "installationLocation": "Installation location"
@@ -143,7 +142,6 @@
       "addTitle": "Add device",
       "editTitle": "Edit device",
       "query": "Query",
-      "deviceTypeRequired": "Selecting a device type is required",
       "ipHint": "Enter the device IP if you know it.",
       "ipInvalid": "The IP address format is invalid"
     },
@@ -167,9 +165,9 @@
       "deviceDeleted": "Device deleted",
       "deviceQuerySuccess": "The device IP and information were received",
       "deviceQueryFailed": "Could not query the device; check the serial number and network",
-      "deviceTypesFailed": "Could not load the device type list",
       "deviceRegisteredQueryFailed": "The device was saved, but its IP could not be queried; it will be checked again later",
       "deviceIpChanged": "The IP address of “{{name}}” changed; the page is being refreshed",
+      "devicesQueried": "Queried {{total}} devices; {{active}} are active",
       "connectionFailed": "Could not communicate with the device",
       "loginFailed": "Could not sign in to the device panel",
       "missingCredentials": "Save the device username and password to use automatic sign-in. The panel was opened for manual sign-in.",

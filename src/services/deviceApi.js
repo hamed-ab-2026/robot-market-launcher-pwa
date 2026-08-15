@@ -2,20 +2,6 @@ const MOCK_DELAY_MS = 700;
 const DEVICE_REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT) || 10_000;
 
 
-/**
- * TODO: بعد از آماده‌شدن API، لیست ثابت زیر با درخواست واقعی دریافت انواع دستگاه جایگزین شود.
- * خروجی API باید حداقل شامل id و name باشد تا بدون تغییر فرم قابل استفاده باشد.
- */
-export async function fetchDeviceTypes() {
-  return [
-    {
-      id: "cold-vending",
-      name: "دستگاه وندینگ سرد"
-    }
-  ];
-}
-
-
 /** یک Promise زمان‌دار می‌سازد تا تأخیر طبیعی شبکه در API آزمایشی شبیه‌سازی شود. */
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,6 +77,32 @@ export function fetchDeviceInfoByIp(ipAddress) {
     .replace(/\/.*$/, "");
   if (!normalizedIp) throw new Error("IP_REQUIRED");
   return requestDeviceInfo(`http://${normalizedIp}/api/getdevice`);
+}
+
+
+function serialsMatch(firstSerial, secondSerial) {
+  return normalizeSerial(firstSerial).toUpperCase() === normalizeSerial(secondSerial).toUpperCase();
+}
+
+
+/**
+ * ابتدا IP موجود را امتحان می‌کند. اگر API در دسترس نباشد یا سریال پاسخ با سریال مورد انتظار
+ * یکسان نباشد، دستگاه را با mDNS و مسیر SERIAL.local/api/getdevice پیدا می‌کند.
+ */
+export async function resolveDeviceInfo({serial, ipAddress}) {
+  if (ipAddress) {
+    try {
+      const infoFromIp = await fetchDeviceInfoByIp(ipAddress);
+      if (serialsMatch(infoFromIp.plateSerial, serial)) {
+        return {...infoFromIp, source: "ip"};
+      }
+    } catch {
+      // در صورت خطا، استعلام از mDNS ادامه پیدا می‌کند.
+    }
+  }
+
+  const infoFromMdns = await fetchDeviceInfoBySerial(serial);
+  return {...infoFromMdns, source: "mdns"};
 }
 
 
