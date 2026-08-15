@@ -2,6 +2,20 @@ const MOCK_DELAY_MS = 700;
 const DEVICE_REQUEST_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT) || 10_000;
 
 
+/**
+ * TODO: بعد از آماده‌شدن API، لیست ثابت زیر با درخواست واقعی دریافت انواع دستگاه جایگزین شود.
+ * خروجی API باید حداقل شامل id و name باشد تا بدون تغییر فرم قابل استفاده باشد.
+ */
+export async function fetchDeviceTypes() {
+  return [
+    {
+      id: "cold-vending",
+      name: "دستگاه وندینگ سرد"
+    }
+  ];
+}
+
+
 /** یک Promise زمان‌دار می‌سازد تا تأخیر طبیعی شبکه در API آزمایشی شبیه‌سازی شود. */
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

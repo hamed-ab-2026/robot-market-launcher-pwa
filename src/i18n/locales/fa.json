@@ -81,7 +81,7 @@
       "title": "تنظیمات پیشرفته دستگاه"
     },
     "placeholders": {
-      "deviceName": "مثلاً ربات پذیرش",
+      "deviceType": "نوع دستگاه را انتخاب کنید",
       "installationLocation": "مثلاً سالن پذیرش (اختیاری)",
       "username": "نام کاربری را وارد کنید",
       "password": "رمز عبور را وارد کنید"
@@ -129,7 +129,7 @@
     "fields": {
       "username": "نام کاربری",
       "password": "رمز عبور",
-      "deviceName": "نام دستگاه",
+      "deviceType": "نوع دستگاه",
       "serial": "شماره سریال پلاک دستگاه",
       "ipAddress": "آدرس IP",
       "installationLocation": "محل نصب"
@@ -143,6 +143,7 @@
       "addTitle": "افزودن دستگاه",
       "editTitle": "ویرایش دستگاه",
       "query": "استعلام",
+      "deviceTypeRequired": "انتخاب نوع دستگاه الزامی است",
       "ipHint": "اگر IP دستگاه را می‌دانید، آن را وارد کنید.",
       "ipInvalid": "فرمت IP صحیح نیست"
     },
@@ -166,6 +167,7 @@
       "deviceDeleted": "دستگاه حذف شد",
       "deviceQuerySuccess": "IP و اطلاعات دستگاه دریافت شد",
       "deviceQueryFailed": "استعلام دستگاه انجام نشد؛ شماره سریال و شبکه را بررسی کنید",
+      "deviceTypesFailed": "دریافت لیست انواع دستگاه انجام نشد",
       "deviceRegisteredQueryFailed": "دستگاه ثبت شد، اما استعلام IP آن انجام نشد؛ بعداً دوباره بررسی می‌شود",
       "deviceIpChanged": "IP دستگاه «{{name}}» تغییر کرده است؛ صفحه در حال به‌روزرسانی است",
       "connectionFailed": "ارتباط با دستگاه برقرار نشد",

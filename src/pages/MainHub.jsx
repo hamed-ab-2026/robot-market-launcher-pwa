@@ -9,6 +9,7 @@ import {
     message,
     Modal,
     Radio,
+    Select,
     Space,
     Table,
     Tag,
@@ -41,6 +42,7 @@ import {
     buildDeviceBaseUrl,
     fetchDeviceInfoByIp,
     fetchDeviceInfoBySerial,
+    fetchDeviceTypes,
     loginToOnlinePanel
 } from "../services/deviceApi";
 import {
@@ -57,7 +59,7 @@ import {
 
 const ONLINE_PANEL_URL = "https://panel.my-rm.com/login";
 const EMPTY_DEVICE = {
-    name: "",
+    deviceTypeId: undefined,
     serial: "",
     installationLocation: "",
     type: "",
@@ -115,6 +117,8 @@ export default function MainHub() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isQueryingSerial, setIsQueryingSerial] = useState(false);
     const [deviceStatuses, setDeviceStatuses] = useState({});
+    const [deviceTypes, setDeviceTypes] = useState([]);
+    const [isLoadingDeviceTypes, setIsLoadingDeviceTypes] = useState(false);
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [advancedDevice, setAdvancedDevice] = useState(null);
@@ -300,6 +304,20 @@ export default function MainHub() {
         deviceForm.resetFields();
         deviceForm.setFieldsValue(EMPTY_DEVICE);
         setDeviceModalOpen(true);
+        loadDeviceTypes();
+    }
+
+
+    async function loadDeviceTypes() {
+        setIsLoadingDeviceTypes(true);
+        try {
+            setDeviceTypes(await fetchDeviceTypes());
+        } catch {
+            setDeviceTypes([]);
+            message.error(t("hub.messages.deviceTypesFailed"));
+        } finally {
+            setIsLoadingDeviceTypes(false);
+        }
     }
 
 
@@ -310,6 +328,7 @@ export default function MainHub() {
             const editableDevice = await getEditableDevice(device);
             deviceForm.setFieldsValue(editableDevice);
             setDeviceModalOpen(true);
+            loadDeviceTypes();
         } catch {
             message.error(t("hub.messages.decryptFailed"));
         }
@@ -342,7 +361,12 @@ export default function MainHub() {
         const values = await deviceForm.validateFields();
         setIsSaving(true);
         try {
-            const candidate = {...editingDevice, ...values};
+            const selectedType = deviceTypes.find((item) => item.id === values.deviceTypeId);
+            const candidate = {
+                ...editingDevice,
+                ...values,
+                name: selectedType?.name || editingDevice?.name || ""
+            };
 
             const savedDevice = await saveDevice(candidate);
             setDevices(loadDevices());
@@ -971,8 +995,14 @@ export default function MainHub() {
                 destroyOnClose>
 
                 <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
-                    <Form.Item name="name" label={t("hub.fields.deviceName")} rules={[{required: true}]}>
-                        <Input placeholder={t("hub.placeholders.deviceName")}/>
+                    <Form.Item
+                        name="deviceTypeId"
+                        label={t("hub.fields.deviceType")}
+                        rules={[{required: true, message: t("hub.deviceForm.deviceTypeRequired")}]}>
+                        <Select
+                            loading={isLoadingDeviceTypes}
+                            placeholder={t("hub.placeholders.deviceType")}
+                            options={deviceTypes.map((item) => ({value: item.id, label: item.name}))}/>
                     </Form.Item>
                     <Form.Item
                         label={t("hub.fields.serial")}>
