@@ -350,7 +350,6 @@ export default function MainHub() {
             setDeviceModalOpen(false);
             message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));
 
-            // ثبت دستگاه منتظر شبکه نمی‌ماند؛ استعلام اتوماتیک بعد از بسته‌شدن مودال انجام می‌شود.
             fetchDeviceInfoBySerial(savedDevice.serial)
                 .then(async (deviceInfo) => {
                     if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
