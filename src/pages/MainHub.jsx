@@ -705,9 +705,12 @@ export default function MainHub() {
                         buttonStyle="solid"
                         onChange={(event) => setActiveHubSection(event.target.value)}
                         className="flex min-w-max">
-                        <Radio.Button value="devices"><ApiOutlined className="me-2"/>{t("hub.deviceManagement.title")}</Radio.Button>
-                        <Radio.Button value="apps"><AppstoreOutlined className="me-2"/>{t("hub.usefulApps.title")}</Radio.Button>
-                        <Radio.Button value="tutorial"><PlayCircleOutlined className="me-2"/>{t("hub.tutorial.title")}</Radio.Button>
+                        <Radio.Button value="devices"><ApiOutlined className="me-2"/>{t("hub.deviceManagement.title")}
+                        </Radio.Button>
+                        <Radio.Button value="apps"><AppstoreOutlined className="me-2"/>{t("hub.usefulApps.title")}
+                        </Radio.Button>
+                        <Radio.Button value="tutorial"><PlayCircleOutlined className="me-2"/>{t("hub.tutorial.title")}
+                        </Radio.Button>
                     </Radio.Group>
                 </div>
 
@@ -744,63 +747,63 @@ export default function MainHub() {
                     title={t("hub.deviceManagement.title")}
                     description={t("hub.deviceManagement.description")}>
                     <div className="p-4 sm:p-5">
-                             <article
-                                className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                                <div
-                                    className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-                                    <CloudOutlined/>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
-                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
-                                    {hasOnlineCredentials &&
-                                        <Tag className="mt-2" color="green">{t("hub.onlinePanel.saved")}</Tag>}
-                                </div>
-                                <Space direction="vertical" size="small">
-                                    <Button type="primary" icon={<DesktopOutlined/>}
-                                            loading={onlineActionLoading === "iframe"}
-                                            disabled={onlineActionLoading === "direct"}
-                                            onClick={() => requestOnlineOpen("iframe")}>
-                                        {t("hub.actions.iframe")}
+                        <article
+                            className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                            <div
+                                className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                                <CloudOutlined/>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
+                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
+                                {hasOnlineCredentials &&
+                                    <Tag className="mt-2" color="green">{t("hub.onlinePanel.saved")}</Tag>}
+                            </div>
+                            <Space direction="vertical" size="small">
+                                <Button type="primary" icon={<DesktopOutlined/>}
+                                        loading={onlineActionLoading === "iframe"}
+                                        disabled={onlineActionLoading === "direct"}
+                                        onClick={() => requestOnlineOpen("iframe")}>
+                                    {t("hub.actions.iframe")}
+                                </Button>
+                                <Button icon={<LinkOutlined/>}
+                                        loading={onlineActionLoading === "direct"}
+                                        disabled={onlineActionLoading === "iframe"}
+                                        onClick={() => requestOnlineOpen("direct")}>
+                                    {t("hub.actions.direct")}
+                                </Button>
+                                {hasOnlineCredentials &&
+                                    <Button type="link" icon={<EditOutlined/>} onClick={openOnlineLogin}>
+                                        {t("hub.onlinePanel.editCredentials")}
                                     </Button>
-                                    <Button icon={<LinkOutlined/>}
-                                            loading={onlineActionLoading === "direct"}
-                                            disabled={onlineActionLoading === "iframe"}
-                                            onClick={() => requestOnlineOpen("direct")}>
-                                        {t("hub.actions.direct")}
-                                    </Button>
-                                    {hasOnlineCredentials &&
-                                        <Button type="link" icon={<EditOutlined/>} onClick={openOnlineLogin}>
-                                            {t("hub.onlinePanel.editCredentials")}
-                                        </Button>
-                                    }
-                                </Space>
-                            </article>
+                                }
+                            </Space>
+                        </article>
                     </div>
                     <div className="border-t border-slate-100 p-4 dark:border-slate-800 sm:p-5">
-                                 <PanelCard
-                                    icon={<ApiOutlined/>}
-                                    title={t("hub.offlinePanel.title")}
-                                    description={t("hub.offlinePanel.description")}
-                                    buttonText={t("hub.addDevice")}
-                                    onClick={openAddDevice}
-                                    secondaryButtonText={t("hub.queryDevices")}
-                                    secondaryLoading={isQueryingAllDevices}
-                                    onSecondaryClick={() => queryAllDevices({showResult: true})}/>
+                        <PanelCard
+                            icon={<ApiOutlined/>}
+                            title={t("hub.offlinePanel.title")}
+                            description={t("hub.offlinePanel.description")}
+                            buttonText={t("hub.addDevice")}
+                            onClick={openAddDevice}
+                            secondaryButtonText={t("hub.queryDevices")}
+                            secondaryLoading={isQueryingAllDevices}
+                            onSecondaryClick={() => queryAllDevices({showResult: true})}/>
                     </div>
                     <div className="border-t border-slate-100 dark:border-slate-800">
-                                <div className="p-4 sm:p-5">
-                                    <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
-                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
-                                </div>
+                        <div className="p-4 sm:p-5">
+                            <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
+                        </div>
                         <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
-                                       tableLayout="fixed"
-                                       scroll={{x: 422}}
+                               tableLayout="fixed"
+                               scroll={{x: 422}}
                                locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
                     </div>
 
                     {iframeDevice &&
-                         <section
+                        <section
                             className="overflow-hidden border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
                             <div
                                 className="flex items-center justify-between gap-3 border-b border-slate-200 p-4 dark:border-slate-700">
@@ -973,7 +976,7 @@ export default function MainHub() {
                     <Form.Item
                         label={t("hub.fields.serial")}>
                         <Space.Compact block>
-                            <Form.Item name="serial" noStyle rules={[{required: true}]}>
+                            <Form.Item required={true} name="serial" noStyle rules={[{required: true}]}>
                                 <Input dir="ltr" placeholder="SN404023"/>
                             </Form.Item>
                             <Button loading={isQueryingSerial} onClick={() => queryDeviceBySerial()}>
@@ -1015,15 +1018,15 @@ export default function MainHub() {
 
 /** کارت معرفی مشترک پنل آنلاین و آفلاین را رندر می‌کند تا ساختار و ظاهر آن‌ها تکرار نشود. */
 function PanelCard({
-    icon,
-    title,
-    description,
-    buttonText,
-    onClick,
-    secondaryButtonText,
-    secondaryLoading,
-    onSecondaryClick
-}) {
+                       icon,
+                       title,
+                       description,
+                       buttonText,
+                       onClick,
+                       secondaryButtonText,
+                       secondaryLoading,
+                       onSecondaryClick
+                   }) {
     return (
         <article
             className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
