@@ -4,10 +4,6 @@ const DEVICES_KEY = "robot_hub_devices";
 const ONLINE_PANEL_KEY = "robot_hub_online_panel";
 
 
-/**
- * یک مقدار JSON را با مدیریت خطا از localStorage می‌خواند.
- * اگر داده وجود نداشته باشد یا خراب باشد، مقدار fallback برگردانده می‌شود تا صفحه از کار نیفتد.
- */
 function readJson(key, fallback) {
     try {
         const value = localStorage.getItem(key);
@@ -45,7 +41,6 @@ export async function saveDevice(device) {
 }
 
 
-/** مشخصات شبکه و اطلاعات عمومی دستگاه را بدون دست‌زدن به رمز ذخیره‌شده به‌روزرسانی می‌کند. */
 export function updateDeviceMetadata(deviceId, changes) {
     const nextDevices = loadDevices().map((device) => device.id === deviceId ? {
         ...device,
@@ -73,13 +68,11 @@ export async function getEditableDevice(device) {
 }
 
 
-/** اطلاعات ذخیره‌شده پنل آنلاین را همراه با رمز رمزنگاری‌شده آن می‌خواند. */
 export function loadOnlinePanel() {
     return readJson(ONLINE_PANEL_KEY, {username: "", encryptedPassword: ""});
 }
 
 
-/** نام کاربری پنل را عادی و رمز را به‌صورت AES-GCM در localStorage ذخیره می‌کند. */
 export async function saveOnlinePanel({username, password}) {
     const record = {
         username,
@@ -91,7 +84,6 @@ export async function saveOnlinePanel({username, password}) {
 }
 
 
-/** اطلاعات پنل آنلاین را می‌خواند و رمز را برای نمایش داخل مودال رمزگشایی می‌کند. */
 export async function getEditableOnlinePanel() {
     const record = loadOnlinePanel();
     return {

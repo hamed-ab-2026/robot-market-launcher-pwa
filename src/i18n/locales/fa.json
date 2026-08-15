@@ -82,7 +82,6 @@
     },
     "placeholders": {
       "deviceName": "مثلاً ربات پذیرش",
-      "deviceType": "مثلاً ربات خدماتی",
       "installationLocation": "مثلاً سالن پذیرش (اختیاری)",
       "username": "نام کاربری را وارد کنید",
       "password": "رمز عبور را وارد کنید"
@@ -102,13 +101,12 @@
     },
     "offlinePanel": {
       "title": "پنل آفلاین",
-      "description": "اتصال با hostname در DHCP یا آدرس IP ثابت",
+      "description": "مدیریت دستگاه‌های متصل به شبکه محلی",
       "button": "افزودن"
     },
     "table": {
       "device": "دستگاه",
       "serial": "سریال / پلاک",
-      "connection": "نوع اتصال",
       "status": "وضعیت",
       "actions": "عملیات"
     },
@@ -134,8 +132,7 @@
       "deviceName": "نام دستگاه",
       "serial": "شماره سریال پلاک دستگاه",
       "ipAddress": "آدرس IP",
-      "installationLocation": "محل نصب",
-      "deviceType": "نوع دستگاه"
+      "installationLocation": "محل نصب"
     },
     "onlineModal": {
       "title": "اطلاعات ورود پنل آنلاین",
@@ -145,16 +142,9 @@
     "deviceForm": {
       "addTitle": "افزودن دستگاه",
       "editTitle": "ویرایش دستگاه",
-      "automaticTab": "اتوماتیک",
-      "manualTab": "دستی",
-      "automaticHint": "IP دستگاه با شماره سریال و از طریق شبکه محلی پیدا می‌شود.",
       "query": "استعلام",
-      "ipRequired": "واردکردن IP در حالت دستی الزامی است",
-      "ipInvalid": "فرمت IP صحیح نیست",
-      "connectionMode": "روش اتصال",
-      "dhcp": "DHCP / mDNS",
-      "staticIp": "IP ثابت",
-      "hostnamePreview": "آدرس دستگاه: http://{{serial}}.local"
+      "ipHint": "اگر IP دستگاه را می‌دانید، آن را وارد کنید.",
+      "ipInvalid": "فرمت IP صحیح نیست"
     },
     "passwordChange": {
       "title": "تغییر رمز عبور دستگاه",
@@ -177,6 +167,7 @@
       "deviceQuerySuccess": "IP و اطلاعات دستگاه دریافت شد",
       "deviceQueryFailed": "استعلام دستگاه انجام نشد؛ شماره سریال و شبکه را بررسی کنید",
       "deviceRegisteredQueryFailed": "دستگاه ثبت شد، اما استعلام IP آن انجام نشد؛ بعداً دوباره بررسی می‌شود",
+      "deviceIpChanged": "IP دستگاه «{{name}}» تغییر کرده است؛ صفحه در حال به‌روزرسانی است",
       "connectionFailed": "ارتباط با دستگاه برقرار نشد",
       "loginFailed": "ورود به پنل دستگاه انجام نشد",
       "missingCredentials": "برای ورود خودکار، نام کاربری و رمز عبور را در اطلاعات دستگاه ثبت کنید. پنل برای ورود دستی باز شد.",

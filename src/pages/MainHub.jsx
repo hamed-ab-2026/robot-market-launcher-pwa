@@ -11,7 +11,6 @@ import {
     Radio,
     Space,
     Table,
-    Tabs,
     Tag,
     Tooltip
 } from
@@ -63,19 +62,13 @@ const EMPTY_DEVICE = {
     installationLocation: "",
     type: "",
     plateSerial: "",
-    ipMode: "automatic",
     ipAddress: "",
     username: "",
     password: ""
 };
 const MIN_NEW_PASSWORD_LENGTH = 8;
-const DEVICE_STATUS_INTERVAL_MS = 60_000;
-
-
-function getDeviceIpMode(device) {
-    if (device.ipMode) return device.ipMode;
-    return device.connectionMode === "static" ? "manual" : "automatic";
-}
+const DEVICE_STATUS_INTERVAL_MS = 10 * 60_000;
+const IP_CHANGE_RELOAD_DELAY_MS = 2_500;
 
 
 function isValidIpv4(value) {
@@ -84,7 +77,6 @@ function isValidIpv4(value) {
 }
 
 
-// هر آیتم بعداً می‌تواند با شناسه یا نشانی embed یک ویدیوی آپارات جایگزین شود.
 const TUTORIAL_SLIDES = [
     {
         id: "tutorial-1",
@@ -101,10 +93,6 @@ const TUTORIAL_SLIDES = [
 ];
 
 
-/**
- * صفحه مرکزی مدیریت پنل ابری و دستگاه‌های محلی است.
- * این کامپوننت مودال‌ها، جدول، ذخیره اطلاعات، رمزگشایی رمزها و دو روش باز کردن پنل دستگاه را هماهنگ می‌کند.
- */
 export default function MainHub() {
     const {t} = useTranslation();
     const {status: connectivityStatus, checkConnection} = useConnectivityStatus();
@@ -123,8 +111,8 @@ export default function MainHub() {
     const [deviceActionLoading, setDeviceActionLoading] = useState({});
     const [isFrameReady, setIsFrameReady] = useState(false);
     const frameTimeoutRef = useRef(null);
+    const reloadScheduledRef = useRef(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const [deviceFormMode, setDeviceFormMode] = useState("automatic");
     const [isQueryingSerial, setIsQueryingSerial] = useState(false);
     const [deviceStatuses, setDeviceStatuses] = useState({});
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
@@ -153,18 +141,26 @@ export default function MainHub() {
             await Promise.allSettled(storedDevices.map(async (device) => {
                 let currentIp = device.ipAddress;
 
-                if (getDeviceIpMode(device) === "automatic" && device.serial) {
+                if (device.serial) {
                     try {
                         const discovered = await fetchDeviceInfoBySerial(device.serial);
                         currentIp = discovered.ipAddress || currentIp;
+                        const ipHasChanged = Boolean(
+                            device.ipAddress && discovered.ipAddress && device.ipAddress !== discovered.ipAddress
+                        );
                         updateDeviceMetadata(device.id, {
-                            ipMode: "automatic",
                             ipAddress: currentIp,
                             type: discovered.type || device.type,
                             plateSerial: discovered.plateSerial || device.plateSerial,
                             lastIpCheckAt: new Date().toISOString(),
                             lastIpCheckStatus: "success"
                         });
+
+                        if (ipHasChanged && !reloadScheduledRef.current) {
+                            reloadScheduledRef.current = true;
+                            message.info(t("hub.messages.deviceIpChanged", {name: device.name}), 2.5);
+                            window.setTimeout(() => window.location.reload(), IP_CHANGE_RELOAD_DELAY_MS);
+                        }
                     } catch {
                         updateDeviceMetadata(device.id, {
                             lastIpCheckAt: new Date().toISOString(),
@@ -195,10 +191,9 @@ export default function MainHub() {
             cancelled = true;
             window.clearInterval(interval);
         };
-    }, []);
+    }, [t]);
 
 
-    /** اطلاعات قبلی پنل آنلاین را رمزگشایی و قبل از نمایش مودال داخل فرم قرار می‌دهد. */
     async function openOnlineLogin() {
         try {
             onlineForm.setFieldsValue(await getEditableOnlinePanel());
@@ -209,7 +204,6 @@ export default function MainHub() {
     }
 
 
-    /** فرم آنلاین را اعتبارسنجی و اطلاعات ورود را به‌صورت رمزنگاری‌شده ذخیره می‌کند. */
     async function handleOnlineLogin() {
         const values = await onlineForm.validateFields();
         setIsSaving(true);
@@ -303,7 +297,6 @@ export default function MainHub() {
     /** وضعیت و فرم را برای ساخت یک دستگاه تازه پاک‌سازی می‌کند و مودال را باز می‌کند. */
     function openAddDevice() {
         setEditingDevice(null);
-        setDeviceFormMode("automatic");
         deviceForm.resetFields();
         deviceForm.setFieldsValue(EMPTY_DEVICE);
         setDeviceModalOpen(true);
@@ -315,9 +308,7 @@ export default function MainHub() {
         setEditingDevice(device);
         try {
             const editableDevice = await getEditableDevice(device);
-            const mode = getDeviceIpMode(editableDevice);
-            setDeviceFormMode(mode);
-            deviceForm.setFieldsValue({...editableDevice, ipMode: mode});
+            deviceForm.setFieldsValue(editableDevice);
             setDeviceModalOpen(true);
         } catch {
             message.error(t("hub.messages.decryptFailed"));
@@ -351,12 +342,7 @@ export default function MainHub() {
         const values = await deviceForm.validateFields();
         setIsSaving(true);
         try {
-            const candidate = {
-                ...editingDevice,
-                ...values,
-                ipMode: deviceFormMode,
-                connectionMode: deviceFormMode === "manual" ? "static" : "dhcp"
-            };
+            const candidate = {...editingDevice, ...values};
 
             const savedDevice = await saveDevice(candidate);
             setDevices(loadDevices());
@@ -365,35 +351,39 @@ export default function MainHub() {
             message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));
 
             // ثبت دستگاه منتظر شبکه نمی‌ماند؛ استعلام اتوماتیک بعد از بسته‌شدن مودال انجام می‌شود.
-            if (deviceFormMode === "automatic") {
-                fetchDeviceInfoBySerial(savedDevice.serial)
-                    .then(async (deviceInfo) => {
-                        if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
-                        updateDeviceMetadata(savedDevice.id, {
-                            ipMode: "automatic",
-                            ipAddress: deviceInfo.ipAddress,
-                            type: deviceInfo.type || savedDevice.type,
-                            plateSerial: deviceInfo.plateSerial || savedDevice.plateSerial,
-                            lastIpCheckAt: new Date().toISOString(),
-                            lastIpCheckStatus: "success"
-                        });
-                        setDevices(loadDevices());
-                        await fetchDeviceInfoByIp(deviceInfo.ipAddress);
-                        setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
-                    })
-                    .catch(() => {
-                        updateDeviceMetadata(savedDevice.id, {
-                            lastIpCheckAt: new Date().toISOString(),
-                            lastIpCheckStatus: "failed"
-                        });
-                        setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"}));
-                        message.warning(t("hub.messages.deviceRegisteredQueryFailed"));
+            fetchDeviceInfoBySerial(savedDevice.serial)
+                .then(async (deviceInfo) => {
+                    if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
+                    updateDeviceMetadata(savedDevice.id, {
+                        ipAddress: deviceInfo.ipAddress,
+                        type: deviceInfo.type || savedDevice.type,
+                        plateSerial: deviceInfo.plateSerial || savedDevice.plateSerial,
+                        lastIpCheckAt: new Date().toISOString(),
+                        lastIpCheckStatus: "success"
                     });
-            } else {
-                fetchDeviceInfoByIp(savedDevice.ipAddress)
-                    .then(() => setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"})))
-                    .catch(() => setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"})));
-            }
+                    setDevices(loadDevices());
+                    await fetchDeviceInfoByIp(deviceInfo.ipAddress);
+                    setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
+                })
+                .catch(async () => {
+                    updateDeviceMetadata(savedDevice.id, {
+                        lastIpCheckAt: new Date().toISOString(),
+                        lastIpCheckStatus: "failed"
+                    });
+
+                    if (savedDevice.ipAddress) {
+                        try {
+                            await fetchDeviceInfoByIp(savedDevice.ipAddress);
+                            setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
+                            return;
+                        } catch {
+                            // وضعیت در ادامه غیرفعال می‌شود.
+                        }
+                    }
+
+                    setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"}));
+                    message.warning(t("hub.messages.deviceRegisteredQueryFailed"));
+                });
         } catch {
             message.error(t("hub.messages.connectionFailed"));
         } finally {
@@ -982,40 +972,6 @@ export default function MainHub() {
                 destroyOnClose>
 
                 <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
-                    <Tabs
-                        activeKey={deviceFormMode}
-                        onChange={(mode) => {
-                            setDeviceFormMode(mode);
-                            deviceForm.setFieldValue("ipMode", mode);
-                        }}
-                        items={[
-                            {
-                                key: "automatic",
-                                label: t("hub.deviceForm.automaticTab"),
-                                children: <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                                    {t("hub.deviceForm.automaticHint")}
-                                </p>
-                            },
-                            {
-                                key: "manual",
-                                label: t("hub.deviceForm.manualTab"),
-                                children: <Form.Item
-                                    name="ipAddress"
-                                    label={t("hub.fields.ipAddress")}
-                                    rules={deviceFormMode === "manual" ? [
-                                        {required: true, message: t("hub.deviceForm.ipRequired")},
-                                        () => ({
-                                            validator(_, value) {
-                                                return !value || isValidIpv4(value) ? Promise.resolve() :
-                                                    Promise.reject(new Error(t("hub.deviceForm.ipInvalid")));
-                                            }
-                                        })
-                                    ] : []}>
-                                    <Input dir="ltr" placeholder="192.168.4.1"/>
-                                </Form.Item>
-                            }
-                        ]}/>
-                    <Form.Item name="ipMode" hidden><Input/></Form.Item>
                     <Form.Item name="name" label={t("hub.fields.deviceName")} rules={[{required: true}]}>
                         <Input placeholder={t("hub.placeholders.deviceName")}/>
                     </Form.Item>
@@ -1025,14 +981,27 @@ export default function MainHub() {
                             <Form.Item name="serial" noStyle rules={[{required: true}]}>
                                 <Input dir="ltr" placeholder="SN404023"/>
                             </Form.Item>
-                            {deviceFormMode === "automatic" &&
-                                <Button loading={isQueryingSerial} onClick={() => queryDeviceBySerial()}>
-                                    {t("hub.deviceForm.query")}
-                                </Button>}
+                            <Button loading={isQueryingSerial} onClick={() => queryDeviceBySerial()}>
+                                {t("hub.deviceForm.query")}
+                            </Button>
                         </Space.Compact>
                     </Form.Item>
                     <Form.Item name="installationLocation" label={t("hub.fields.installationLocation")}>
                         <Input placeholder={t("hub.placeholders.installationLocation")}/>
+                    </Form.Item>
+                    <Form.Item
+                        name="ipAddress"
+                        label={t("hub.fields.ipAddress")}
+                        extra={t("hub.deviceForm.ipHint")}
+                        rules={[
+                            () => ({
+                                validator(_, value) {
+                                    return !value || isValidIpv4(value) ? Promise.resolve() :
+                                        Promise.reject(new Error(t("hub.deviceForm.ipInvalid")));
+                                }
+                            })
+                        ]}>
+                        <Input dir="ltr" placeholder="192.168.4.1"/>
                     </Form.Item>
                     <Form.Item name="username" label={t("hub.fields.username")}>
                         <Input autoComplete="username" placeholder={t("hub.placeholders.username")}/>

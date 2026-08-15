@@ -82,7 +82,6 @@
     },
     "placeholders": {
       "deviceName": "For example: Reception robot",
-      "deviceType": "For example: Service robot",
       "installationLocation": "For example: Reception hall (optional)",
       "username": "Enter the username",
       "password": "Enter the password"
@@ -102,13 +101,12 @@
     },
     "offlinePanel": {
       "title": "Offline panel",
-      "description": "Connect through DHCP hostname or a static IP address",
+      "description": "Manage devices connected to the local network",
       "button": "Add"
     },
     "table": {
       "device": "Device",
       "serial": "Serial / plate",
-      "connection": "Connection",
       "status": "Status",
       "actions": "Actions"
     },
@@ -134,8 +132,7 @@
       "deviceName": "Device name",
       "serial": "Device serial / plate number",
       "ipAddress": "IP address",
-      "installationLocation": "Installation location",
-      "deviceType": "Device type"
+      "installationLocation": "Installation location"
     },
     "onlineModal": {
       "title": "Online panel credentials",
@@ -145,16 +142,9 @@
     "deviceForm": {
       "addTitle": "Add device",
       "editTitle": "Edit device",
-      "automaticTab": "Automatic",
-      "manualTab": "Manual",
-      "automaticHint": "The device IP is discovered by serial number on the local network.",
       "query": "Query",
-      "ipRequired": "An IP address is required in manual mode",
-      "ipInvalid": "The IP address format is invalid",
-      "connectionMode": "Connection method",
-      "dhcp": "DHCP / mDNS",
-      "staticIp": "Static IP",
-      "hostnamePreview": "Device address: http://{{serial}}.local"
+      "ipHint": "Enter the device IP if you know it.",
+      "ipInvalid": "The IP address format is invalid"
     },
     "passwordChange": {
       "title": "Change device password",
@@ -177,6 +167,7 @@
       "deviceQuerySuccess": "The device IP and information were received",
       "deviceQueryFailed": "Could not query the device; check the serial number and network",
       "deviceRegisteredQueryFailed": "The device was saved, but its IP could not be queried; it will be checked again later",
+      "deviceIpChanged": "The IP address of “{{name}}” changed; the page is being refreshed",
       "connectionFailed": "Could not communicate with the device",
       "loginFailed": "Could not sign in to the device panel",
       "missingCredentials": "Save the device username and password to use automatic sign-in. The panel was opened for manual sign-in.",

@@ -86,28 +86,6 @@ export function fetchDeviceInfoByIp(ipAddress) {
 
 
 /**
- * فعلاً دریافت مشخصات دستگاه از firmware را شبیه‌سازی می‌کند و اطلاعات استاندارد برمی‌گرداند.
- * پس از آماده شدن API، بخش TODO باید با درخواست واقعی به مسیر /api/getdevice جایگزین شود.
- */
-export async function fetchDeviceInfo(device) {
-  await wait(MOCK_DELAY_MS);
-
-  return {
-    name: device.name,
-    serial: device.serial,
-    type: device.type || "robot",
-    ipAddress: device.ipAddress || "",
-    baseUrl: buildDeviceBaseUrl(device),
-    status: "unknown"
-  };
-}
-
-
-
-
-
-
-/**
  * فعلاً ورود به پنل ابری را شبیه‌سازی می‌کند تا رابط کاربری مستقل از API قابل تست باشد.
  * بعداً نام کاربری و رمز باید در همین نقطه به سرویس احراز هویت واقعی ارسال شوند.
  */
