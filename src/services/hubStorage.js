@@ -25,10 +25,13 @@ export function loadDevices() {
 
 export async function saveDevice(device) {
     const devices = loadDevices();
+    const encryptedPassword = device.password === undefined ?
+        (device.encryptedPassword || "") :
+        await encryptSecret(device.password);
     const record = {
         ...device,
         id: device.id || crypto.randomUUID(),
-        encryptedPassword: await encryptSecret(device.password),
+        encryptedPassword,
         password: undefined,
         updatedAt: new Date().toISOString()
     };
@@ -39,6 +42,18 @@ export async function saveDevice(device) {
 
     localStorage.setItem(DEVICES_KEY, JSON.stringify(nextDevices));
     return record;
+}
+
+
+/** مشخصات شبکه و اطلاعات عمومی دستگاه را بدون دست‌زدن به رمز ذخیره‌شده به‌روزرسانی می‌کند. */
+export function updateDeviceMetadata(deviceId, changes) {
+    const nextDevices = loadDevices().map((device) => device.id === deviceId ? {
+        ...device,
+        ...changes,
+        updatedAt: new Date().toISOString()
+    } : device);
+    localStorage.setItem(DEVICES_KEY, JSON.stringify(nextDevices));
+    return nextDevices.find((device) => device.id === deviceId) || null;
 }
 
 

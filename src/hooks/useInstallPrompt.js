@@ -1,10 +1,6 @@
 import {useState, useEffect, useCallback} from "react";
 
 
-/**
- * رویداد نصب PWA در مرورگرهای Chromium را نگه می‌دارد تا نصب با دکمه اختصاصی برنامه آغاز شود.
- * Hook همچنین نصب موفق را تشخیص می‌دهد و تابع promptInstall را برای نمایش پنجره بومی مرورگر ارائه می‌کند.
- */
 export function useInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [isInstalled, setIsInstalled] = useState(false);

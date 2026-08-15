@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {
     Button,
@@ -11,6 +11,7 @@ import {
     Radio,
     Space,
     Table,
+    Tabs,
     Tag,
     Tooltip
 } from
@@ -22,7 +23,6 @@ import {
     DeleteOutlined,
     DesktopOutlined,
     EditOutlined,
-    InfoCircleOutlined,
     LinkOutlined,
     MessageOutlined,
     PlayCircleOutlined,
@@ -38,7 +38,12 @@ import ThemeToggle from "../components/common/ThemeToggle";
 import RobotMascot from "../components/common/RobotMascot";
 import PersianDateTime from "../components/common/PersianDateTime";
 import {useConnectivityStatus} from "../hooks/useConnectivityStatus";
-import {buildDeviceBaseUrl, fetchDeviceInfo, loginToOnlinePanel} from "../services/deviceApi";
+import {
+    buildDeviceBaseUrl,
+    fetchDeviceInfoByIp,
+    fetchDeviceInfoBySerial,
+    loginToOnlinePanel
+} from "../services/deviceApi";
 import {
     deleteDevice,
     getEditableDevice,
@@ -46,7 +51,8 @@ import {
     loadDevices,
     loadOnlinePanel,
     saveDevice,
-    saveOnlinePanel
+    saveOnlinePanel,
+    updateDeviceMetadata
 } from
         "../services/hubStorage";
 
@@ -54,13 +60,28 @@ const ONLINE_PANEL_URL = "https://panel.my-rm.com/login";
 const EMPTY_DEVICE = {
     name: "",
     serial: "",
-    type: "robot",
-    connectionMode: "static",
-    ipAddress: "192.168.4.1",
+    installationLocation: "",
+    type: "",
+    plateSerial: "",
+    ipMode: "automatic",
+    ipAddress: "",
     username: "",
     password: ""
 };
 const MIN_NEW_PASSWORD_LENGTH = 8;
+const DEVICE_STATUS_INTERVAL_MS = 60_000;
+
+
+function getDeviceIpMode(device) {
+    if (device.ipMode) return device.ipMode;
+    return device.connectionMode === "static" ? "manual" : "automatic";
+}
+
+
+function isValidIpv4(value) {
+    const parts = String(value || "").trim().split(".");
+    return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
+}
 
 
 // هر آیتم بعداً می‌تواند با شناسه یا نشانی embed یک ویدیوی آپارات جایگزین شود.
@@ -103,6 +124,9 @@ export default function MainHub() {
     const [isFrameReady, setIsFrameReady] = useState(false);
     const frameTimeoutRef = useRef(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [deviceFormMode, setDeviceFormMode] = useState("automatic");
+    const [isQueryingSerial, setIsQueryingSerial] = useState(false);
+    const [deviceStatuses, setDeviceStatuses] = useState({});
     const [passwordChangeContext, setPasswordChangeContext] = useState(null);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [advancedDevice, setAdvancedDevice] = useState(null);
@@ -112,8 +136,66 @@ export default function MainHub() {
     const [deviceForm] = Form.useForm();
     const [onlineForm] = Form.useForm();
     const [changePasswordForm] = Form.useForm();
-    const connectionMode = Form.useWatch("connectionMode", deviceForm) || "static";
-    const serialValue = Form.useWatch("serial", deviceForm) || "SN404023";
+
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function checkAllDevices() {
+            const storedDevices = loadDevices();
+            if (!storedDevices.length) return;
+
+            setDeviceStatuses((current) => ({
+                ...current,
+                ...Object.fromEntries(storedDevices.map((device) => [device.id, "checking"]))
+            }));
+
+            await Promise.allSettled(storedDevices.map(async (device) => {
+                let currentIp = device.ipAddress;
+
+                if (getDeviceIpMode(device) === "automatic" && device.serial) {
+                    try {
+                        const discovered = await fetchDeviceInfoBySerial(device.serial);
+                        currentIp = discovered.ipAddress || currentIp;
+                        updateDeviceMetadata(device.id, {
+                            ipMode: "automatic",
+                            ipAddress: currentIp,
+                            type: discovered.type || device.type,
+                            plateSerial: discovered.plateSerial || device.plateSerial,
+                            lastIpCheckAt: new Date().toISOString(),
+                            lastIpCheckStatus: "success"
+                        });
+                    } catch {
+                        updateDeviceMetadata(device.id, {
+                            lastIpCheckAt: new Date().toISOString(),
+                            lastIpCheckStatus: "failed"
+                        });
+                    }
+                }
+
+                try {
+                    if (!currentIp) throw new Error("DEVICE_IP_MISSING");
+                    await fetchDeviceInfoByIp(currentIp);
+                    if (!cancelled) {
+                        setDeviceStatuses((current) => ({...current, [device.id]: "active"}));
+                    }
+                } catch {
+                    if (!cancelled) {
+                        setDeviceStatuses((current) => ({...current, [device.id]: "inactive"}));
+                    }
+                }
+            }));
+
+            if (!cancelled) setDevices(loadDevices());
+        }
+
+        checkAllDevices();
+        const interval = window.setInterval(checkAllDevices, DEVICE_STATUS_INTERVAL_MS);
+        return () => {
+            cancelled = true;
+            window.clearInterval(interval);
+        };
+    }, []);
 
 
     /** اطلاعات قبلی پنل آنلاین را رمزگشایی و قبل از نمایش مودال داخل فرم قرار می‌دهد. */
@@ -221,6 +303,8 @@ export default function MainHub() {
     /** وضعیت و فرم را برای ساخت یک دستگاه تازه پاک‌سازی می‌کند و مودال را باز می‌کند. */
     function openAddDevice() {
         setEditingDevice(null);
+        setDeviceFormMode("automatic");
+        deviceForm.resetFields();
         deviceForm.setFieldsValue(EMPTY_DEVICE);
         setDeviceModalOpen(true);
     }
@@ -230,10 +314,35 @@ export default function MainHub() {
     async function openEditDevice(device) {
         setEditingDevice(device);
         try {
-            deviceForm.setFieldsValue(await getEditableDevice(device));
+            const editableDevice = await getEditableDevice(device);
+            const mode = getDeviceIpMode(editableDevice);
+            setDeviceFormMode(mode);
+            deviceForm.setFieldsValue({...editableDevice, ipMode: mode});
             setDeviceModalOpen(true);
         } catch {
             message.error(t("hub.messages.decryptFailed"));
+        }
+    }
+
+
+    async function queryDeviceBySerial({showSuccessMessage = true} = {}) {
+        const {serial} = await deviceForm.validateFields(["serial"]);
+        setIsQueryingSerial(true);
+        try {
+            const deviceInfo = await fetchDeviceInfoBySerial(serial);
+            if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
+            deviceForm.setFieldsValue({
+                ipAddress: deviceInfo.ipAddress,
+                type: deviceInfo.type,
+                plateSerial: deviceInfo.plateSerial
+            });
+            if (showSuccessMessage) message.success(t("hub.messages.deviceQuerySuccess"));
+            return deviceInfo;
+        } catch (error) {
+            if (showSuccessMessage) message.error(t("hub.messages.deviceQueryFailed"));
+            throw error;
+        } finally {
+            setIsQueryingSerial(false);
         }
     }
 
@@ -242,11 +351,49 @@ export default function MainHub() {
         const values = await deviceForm.validateFields();
         setIsSaving(true);
         try {
-            const candidate = {...editingDevice, ...values};
-            await saveDevice(candidate);
+            const candidate = {
+                ...editingDevice,
+                ...values,
+                ipMode: deviceFormMode,
+                connectionMode: deviceFormMode === "manual" ? "static" : "dhcp"
+            };
+
+            const savedDevice = await saveDevice(candidate);
             setDevices(loadDevices());
+            setDeviceStatuses((current) => ({...current, [savedDevice.id]: "checking"}));
             setDeviceModalOpen(false);
             message.success(t(editingDevice ? "hub.messages.deviceUpdated" : "hub.messages.deviceAdded"));
+
+            // ثبت دستگاه منتظر شبکه نمی‌ماند؛ استعلام اتوماتیک بعد از بسته‌شدن مودال انجام می‌شود.
+            if (deviceFormMode === "automatic") {
+                fetchDeviceInfoBySerial(savedDevice.serial)
+                    .then(async (deviceInfo) => {
+                        if (!deviceInfo.ipAddress) throw new Error("DEVICE_IP_MISSING");
+                        updateDeviceMetadata(savedDevice.id, {
+                            ipMode: "automatic",
+                            ipAddress: deviceInfo.ipAddress,
+                            type: deviceInfo.type || savedDevice.type,
+                            plateSerial: deviceInfo.plateSerial || savedDevice.plateSerial,
+                            lastIpCheckAt: new Date().toISOString(),
+                            lastIpCheckStatus: "success"
+                        });
+                        setDevices(loadDevices());
+                        await fetchDeviceInfoByIp(deviceInfo.ipAddress);
+                        setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"}));
+                    })
+                    .catch(() => {
+                        updateDeviceMetadata(savedDevice.id, {
+                            lastIpCheckAt: new Date().toISOString(),
+                            lastIpCheckStatus: "failed"
+                        });
+                        setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"}));
+                        message.warning(t("hub.messages.deviceRegisteredQueryFailed"));
+                    });
+            } else {
+                fetchDeviceInfoByIp(savedDevice.ipAddress)
+                    .then(() => setDeviceStatuses((current) => ({...current, [savedDevice.id]: "active"})))
+                    .catch(() => setDeviceStatuses((current) => ({...current, [savedDevice.id]: "inactive"})));
+            }
         } catch {
             message.error(t("hub.messages.connectionFailed"));
         } finally {
@@ -288,18 +435,14 @@ export default function MainHub() {
     }
 
 
-    /** اطلاعات پایه همه دستگاه‌های ثبت‌شده را از آداپتور API دریافت و نتیجه عملیات را اعلام می‌کند. */
+    /**
+     * TODO: بعد از آماده‌شدن API حساب کاربری، این تابع باید همه دستگاه‌هایی را دریافت کند
+     * که حساب واردشده مالک آن‌هاست؛ پاسخ آینده شامل تمام فیلدهای کامل هر دستگاه خواهد بود.
+     */
     async function refreshBaseInformation() {
-        if (!devices.length) {
-            message.info(t("hub.messages.noDevices"));
-            return;
-        }
         setIsRefreshing(true);
         try {
-            await Promise.all(devices.map(fetchDeviceInfo));
-            message.success(t("hub.messages.baseInfoReceived"));
-        } catch {
-            message.error(t("hub.messages.connectionFailed"));
+            message.info(t("hub.messages.baseInfoApiPending"));
         } finally {
             setIsRefreshing(false);
         }
@@ -480,17 +623,16 @@ export default function MainHub() {
                 width: 80,
                 render: (serial) => <span dir="ltr">{serial}</span>
             },
-            // {
-            //     title: t("hub.table.connection"),
-            //     dataIndex: "connectionMode",
-            //     key: "connectionMode",
-            //     width: 140,
-            //     render: (mode) =>
-            //         <Tag color={mode === "dhcp" ? "cyan" : "geekblue"}>
-            //             {mode === "dhcp" ? t("hub.deviceForm.dhcp") : t("hub.deviceForm.staticIp")}
-            //         </Tag>
-            //
-            // },
+            {
+                title: t("hub.table.status"),
+                key: "status",
+                width: 90,
+                render: (_, device) => {
+                    const status = deviceStatuses[device.id] || "checking";
+                    const color = status === "active" ? "green" : status === "inactive" ? "red" : "gold";
+                    return <Tag color={color}>{t(`hub.deviceStatus.${status}`)}</Tag>;
+                }
+            },
             {
                 title: t("hub.table.actions"),
                 key: "actions",
@@ -516,7 +658,7 @@ export default function MainHub() {
                     </Space>
 
             }],
-        [t, deviceActionLoading]);
+        [t, deviceActionLoading, deviceStatuses]);
 
     return (
         <div className="min-h-screen bg-surface-light pb-10 dark:bg-surface-dark">
@@ -662,7 +804,7 @@ export default function MainHub() {
                                 </div>
                                 <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
                                        tableLayout="fixed"
-                                       scroll={{x: 332}}
+                                       scroll={{x: 422}}
                                        locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
                             </div>
                         </>}
@@ -840,30 +982,57 @@ export default function MainHub() {
                 destroyOnClose>
 
                 <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
-                    <Form.Item name="connectionMode" label={t("hub.deviceForm.connectionMode")}>
-                        <Radio.Group buttonStyle="solid">
-                            <Radio.Button value="dhcp">{t("hub.deviceForm.dhcp")}</Radio.Button>
-                            <Radio.Button value="static">{t("hub.deviceForm.staticIp")}</Radio.Button>
-                        </Radio.Group>
-                    </Form.Item>
+                    <Tabs
+                        activeKey={deviceFormMode}
+                        onChange={(mode) => {
+                            setDeviceFormMode(mode);
+                            deviceForm.setFieldValue("ipMode", mode);
+                        }}
+                        items={[
+                            {
+                                key: "automatic",
+                                label: t("hub.deviceForm.automaticTab"),
+                                children: <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
+                                    {t("hub.deviceForm.automaticHint")}
+                                </p>
+                            },
+                            {
+                                key: "manual",
+                                label: t("hub.deviceForm.manualTab"),
+                                children: <Form.Item
+                                    name="ipAddress"
+                                    label={t("hub.fields.ipAddress")}
+                                    rules={deviceFormMode === "manual" ? [
+                                        {required: true, message: t("hub.deviceForm.ipRequired")},
+                                        () => ({
+                                            validator(_, value) {
+                                                return !value || isValidIpv4(value) ? Promise.resolve() :
+                                                    Promise.reject(new Error(t("hub.deviceForm.ipInvalid")));
+                                            }
+                                        })
+                                    ] : []}>
+                                    <Input dir="ltr" placeholder="192.168.4.1"/>
+                                </Form.Item>
+                            }
+                        ]}/>
+                    <Form.Item name="ipMode" hidden><Input/></Form.Item>
                     <Form.Item name="name" label={t("hub.fields.deviceName")} rules={[{required: true}]}>
                         <Input placeholder={t("hub.placeholders.deviceName")}/>
                     </Form.Item>
                     <Form.Item
-                        name="serial"
-                        label={t("hub.fields.serial")}
-                        rules={[{required: connectionMode === "dhcp"}]}
-                        extra={connectionMode === "dhcp" ? t("hub.deviceForm.hostnamePreview", {serial: serialValue}) : undefined}>
-
-                        <Input dir="ltr" placeholder="SN404023"/>
+                        label={t("hub.fields.serial")}>
+                        <Space.Compact block>
+                            <Form.Item name="serial" noStyle rules={[{required: true}]}>
+                                <Input dir="ltr" placeholder="SN404023"/>
+                            </Form.Item>
+                            {deviceFormMode === "automatic" &&
+                                <Button loading={isQueryingSerial} onClick={() => queryDeviceBySerial()}>
+                                    {t("hub.deviceForm.query")}
+                                </Button>}
+                        </Space.Compact>
                     </Form.Item>
-                    {connectionMode === "static" &&
-                        <Form.Item name="ipAddress" label={t("hub.fields.ipAddress")} rules={[{required: true}]}>
-                            <Input dir="ltr" placeholder="192.168.4.1"/>
-                        </Form.Item>
-                    }
-                    <Form.Item name="type" label={t("hub.fields.deviceType")}>
-                        <Input placeholder={t("hub.placeholders.deviceType")}/>
+                    <Form.Item name="installationLocation" label={t("hub.fields.installationLocation")}>
+                        <Input placeholder={t("hub.placeholders.installationLocation")}/>
                     </Form.Item>
                     <Form.Item name="username" label={t("hub.fields.username")}>
                         <Input autoComplete="username" placeholder={t("hub.placeholders.username")}/>
@@ -871,6 +1040,8 @@ export default function MainHub() {
                     <Form.Item name="password" label={t("hub.fields.password")}>
                         <Input.Password autoComplete="new-password" placeholder={t("hub.placeholders.password")}/>
                     </Form.Item>
+                    <Form.Item name="type" hidden><Input/></Form.Item>
+                    <Form.Item name="plateSerial" hidden><Input/></Form.Item>
                 </Form>
             </Modal>
         </div>);

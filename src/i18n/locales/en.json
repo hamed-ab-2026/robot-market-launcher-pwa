@@ -83,6 +83,7 @@
     "placeholders": {
       "deviceName": "For example: Reception robot",
       "deviceType": "For example: Service robot",
+      "installationLocation": "For example: Reception hall (optional)",
       "username": "Enter the username",
       "password": "Enter the password"
     },
@@ -108,7 +109,13 @@
       "device": "Device",
       "serial": "Serial / plate",
       "connection": "Connection",
+      "status": "Status",
       "actions": "Actions"
+    },
+    "deviceStatus": {
+      "checking": "Checking",
+      "active": "Active",
+      "inactive": "Inactive"
     },
     "actions": {
       "iframe": "Open inside the app",
@@ -125,8 +132,9 @@
       "username": "Username",
       "password": "Password",
       "deviceName": "Device name",
-      "serial": "Serial number",
+      "serial": "Device serial / plate number",
       "ipAddress": "IP address",
+      "installationLocation": "Installation location",
       "deviceType": "Device type"
     },
     "onlineModal": {
@@ -137,6 +145,12 @@
     "deviceForm": {
       "addTitle": "Add device",
       "editTitle": "Edit device",
+      "automaticTab": "Automatic",
+      "manualTab": "Manual",
+      "automaticHint": "The device IP is discovered by serial number on the local network.",
+      "query": "Query",
+      "ipRequired": "An IP address is required in manual mode",
+      "ipInvalid": "The IP address format is invalid",
       "connectionMode": "Connection method",
       "dhcp": "DHCP / mDNS",
       "staticIp": "Static IP",
@@ -160,6 +174,9 @@
       "deviceAdded": "Device added",
       "deviceUpdated": "Device updated",
       "deviceDeleted": "Device deleted",
+      "deviceQuerySuccess": "The device IP and information were received",
+      "deviceQueryFailed": "Could not query the device; check the serial number and network",
+      "deviceRegisteredQueryFailed": "The device was saved, but its IP could not be queried; it will be checked again later",
       "connectionFailed": "Could not communicate with the device",
       "loginFailed": "Could not sign in to the device panel",
       "missingCredentials": "Save the device username and password to use automatic sign-in. The panel was opened for manual sign-in.",
@@ -170,6 +187,7 @@
       "oldPasswordInvalid": "The current password is incorrect",
       "noDevices": "Add a device first",
       "baseInfoReceived": "Base information received",
+      "baseInfoApiPending": "The API for devices owned by this account is not available yet",
       "missingOnlineCredentials": "Save the online panel username and password first",
       "onlineLoginFailed": "Could not sign in to the online panel",
       "iframeNotAllowed": "The destination site does not allow in-app display or did not respond"

@@ -83,6 +83,7 @@
     "placeholders": {
       "deviceName": "مثلاً ربات پذیرش",
       "deviceType": "مثلاً ربات خدماتی",
+      "installationLocation": "مثلاً سالن پذیرش (اختیاری)",
       "username": "نام کاربری را وارد کنید",
       "password": "رمز عبور را وارد کنید"
     },
@@ -108,7 +109,13 @@
       "device": "دستگاه",
       "serial": "سریال / پلاک",
       "connection": "نوع اتصال",
+      "status": "وضعیت",
       "actions": "عملیات"
+    },
+    "deviceStatus": {
+      "checking": "در حال بررسی",
+      "active": "فعال",
+      "inactive": "غیرفعال"
     },
     "actions": {
       "iframe": "نمایش داخل برنامه",
@@ -125,8 +132,9 @@
       "username": "نام کاربری",
       "password": "رمز عبور",
       "deviceName": "نام دستگاه",
-      "serial": "شماره سریال",
+      "serial": "شماره سریال پلاک دستگاه",
       "ipAddress": "آدرس IP",
+      "installationLocation": "محل نصب",
       "deviceType": "نوع دستگاه"
     },
     "onlineModal": {
@@ -137,6 +145,12 @@
     "deviceForm": {
       "addTitle": "افزودن دستگاه",
       "editTitle": "ویرایش دستگاه",
+      "automaticTab": "اتوماتیک",
+      "manualTab": "دستی",
+      "automaticHint": "IP دستگاه با شماره سریال و از طریق شبکه محلی پیدا می‌شود.",
+      "query": "استعلام",
+      "ipRequired": "واردکردن IP در حالت دستی الزامی است",
+      "ipInvalid": "فرمت IP صحیح نیست",
       "connectionMode": "روش اتصال",
       "dhcp": "DHCP / mDNS",
       "staticIp": "IP ثابت",
@@ -160,6 +174,9 @@
       "deviceAdded": "دستگاه اضافه شد",
       "deviceUpdated": "دستگاه ویرایش شد",
       "deviceDeleted": "دستگاه حذف شد",
+      "deviceQuerySuccess": "IP و اطلاعات دستگاه دریافت شد",
+      "deviceQueryFailed": "استعلام دستگاه انجام نشد؛ شماره سریال و شبکه را بررسی کنید",
+      "deviceRegisteredQueryFailed": "دستگاه ثبت شد، اما استعلام IP آن انجام نشد؛ بعداً دوباره بررسی می‌شود",
       "connectionFailed": "ارتباط با دستگاه برقرار نشد",
       "loginFailed": "ورود به پنل دستگاه انجام نشد",
       "missingCredentials": "برای ورود خودکار، نام کاربری و رمز عبور را در اطلاعات دستگاه ثبت کنید. پنل برای ورود دستی باز شد.",
@@ -170,6 +187,7 @@
       "oldPasswordInvalid": "رمز عبور فعلی صحیح نیست",
       "noDevices": "ابتدا یک دستگاه اضافه کنید",
       "baseInfoReceived": "اطلاعات پایه دریافت شد",
+      "baseInfoApiPending": "API دریافت دستگاه‌های متعلق به حساب هنوز آماده نشده است",
       "missingOnlineCredentials": "ابتدا نام کاربری و رمز عبور پنل آنلاین را ذخیره کنید",
       "onlineLoginFailed": "ورود به پنل آنلاین انجام نشد",
       "iframeNotAllowed": "سایت پذیرنده اجازه نمایش داخل برنامه را نمی‌دهد یا پاسخ‌گو نیست"
