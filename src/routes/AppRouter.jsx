@@ -24,6 +24,7 @@ function RequireUnlock({children}) {
 export default function AppRouter() {
     const [splashDone, setSplashDone] = useState(false);
 
+
     useEffect(() => {
         const timer = setTimeout(() => setSplashDone(true), SPLASH_DURATION_MS);
         return () => clearTimeout(timer);

@@ -662,18 +662,6 @@ export default function MainHub() {
                     <RobotMascot variant="robot" className="h-10 w-10 flex-none"/>
                     <div className="min-w-0 flex-1">
                         <h1 className="truncate font-bold text-slate-800 dark:text-white">{t("hub.title")}</h1>
-                        <button
-                            type="button"
-                            onClick={checkConnection}
-                            className={`mt-0.5 flex items-center gap-1.5 text-xs font-medium ${
-                                connectivityStatus === "online" ? "text-emerald-600 dark:text-emerald-400" :
-                                    connectivityStatus === "offline" ? "text-red-500 dark:text-red-400" :
-                                        "text-amber-500 dark:text-amber-400"
-                            }`}>
-                            <WifiOutlined/>
-                            {t(`hub.connectivity.${connectivityStatus}`)}
-                            <ReloadOutlined className={connectivityStatus === "checking" ? "animate-spin" : ""}/>
-                        </button>
                     </div>
                     <div className="hidden md:block"><PersianDateTime/></div>
                     <Button
@@ -753,12 +741,28 @@ export default function MainHub() {
                                 className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
                                 <CloudOutlined/>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
-                                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
-                                {hasOnlineCredentials &&
-                                    <Tag className="mt-2" color="green">{t("hub.onlinePanel.saved")}</Tag>}
-                            </div>
+                                <div className="min-w-0 flex-1">
+                                    <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={checkConnection}
+                                            className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                                                connectivityStatus === "online" ?
+                                                    "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" :
+                                                    connectivityStatus === "offline" ?
+                                                        "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300" :
+                                                        "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                                            }`}>
+                                            <WifiOutlined/>
+                                            {t(`hub.connectivity.${connectivityStatus}`)}
+                                            <ReloadOutlined className={connectivityStatus === "checking" ? "animate-spin" : ""}/>
+                                        </button>
+                                        {hasOnlineCredentials &&
+                                            <Tag color="green">{t("hub.onlinePanel.saved")}</Tag>}
+                                    </div>
+                                </div>
                             <Space direction="vertical" size="small">
                                 <Button type="primary" icon={<DesktopOutlined/>}
                                         loading={onlineActionLoading === "iframe"}
