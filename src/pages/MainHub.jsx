@@ -736,11 +736,12 @@ export default function MainHub() {
                     description={t("hub.deviceManagement.description")}>
                     <div className="p-4 sm:p-5">
                         <article
-                            className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                            <div
-                                className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-                                <CloudOutlined/>
-                            </div>
+                            className="flex flex-col items-stretch gap-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:p-5">
+                            <div className="flex min-w-0 flex-1 items-center gap-4">
+                                <div
+                                    className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                                    <CloudOutlined/>
+                                </div>
                                 <div className="min-w-0 flex-1">
                                     <h2 className="font-bold text-slate-800 dark:text-white">{t("hub.onlinePanel.title")}</h2>
                                     <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{t("hub.onlinePanel.description")}</p>
@@ -757,31 +758,33 @@ export default function MainHub() {
                                             }`}>
                                             <WifiOutlined/>
                                             {t(`hub.connectivity.${connectivityStatus}`)}
-                                            <ReloadOutlined className={connectivityStatus === "checking" ? "animate-spin" : ""}/>
+                                            <ReloadOutlined
+                                                className={connectivityStatus === "checking" ? "animate-spin" : ""}/>
                                         </button>
                                         {hasOnlineCredentials &&
                                             <Tag color="green">{t("hub.onlinePanel.saved")}</Tag>}
                                     </div>
                                 </div>
-                            <Space direction="vertical" size="small">
-                                <Button type="primary" icon={<DesktopOutlined/>}
+                            </div>
+                            <div className="flex w-full flex-col gap-2 sm:w-auto">
+                                <Button block type="primary" icon={<DesktopOutlined/>}
                                         loading={onlineActionLoading === "iframe"}
                                         disabled={onlineActionLoading === "direct"}
                                         onClick={() => requestOnlineOpen("iframe")}>
                                     {t("hub.actions.iframe")}
                                 </Button>
-                                <Button icon={<LinkOutlined/>}
+                                <Button block icon={<LinkOutlined/>}
                                         loading={onlineActionLoading === "direct"}
                                         disabled={onlineActionLoading === "iframe"}
                                         onClick={() => requestOnlineOpen("direct")}>
                                     {t("hub.actions.direct")}
                                 </Button>
                                 {hasOnlineCredentials &&
-                                    <Button type="link" icon={<EditOutlined/>} onClick={openOnlineLogin}>
+                                    <Button block type="link" icon={<EditOutlined/>} onClick={openOnlineLogin}>
                                         {t("hub.onlinePanel.editCredentials")}
                                     </Button>
                                 }
-                            </Space>
+                            </div>
                         </article>
                     </div>
                     <div className="border-t border-slate-100 p-4 dark:border-slate-800 sm:p-5">
@@ -1033,27 +1036,28 @@ function PanelCard({
                    }) {
     return (
         <article
-            className="flex items-center gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div
-                className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-                {icon}
+            className="flex flex-col items-stretch gap-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:p-5">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
+                <div
+                    className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
+                    {icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                    <h2 className="font-bold text-slate-800 dark:text-white">{title}</h2>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
+                </div>
             </div>
-            <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-slate-800 dark:text-white">{title}</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
-            </div>
-            <Space wrap>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 {secondaryButtonText &&
-                    <Button icon={<ReloadOutlined/>} loading={secondaryLoading} onClick={onSecondaryClick}>
+                    <Button block icon={<ReloadOutlined/>} loading={secondaryLoading} onClick={onSecondaryClick}>
                         {secondaryButtonText}
                     </Button>}
-                <Button type="primary" onClick={onClick}>{buttonText}</Button>
-            </Space>
+                <Button block type="primary" onClick={onClick}>{buttonText}</Button>
+            </div>
         </article>);
 
 }
 
-/** قاب ثابت نمای انتخاب‌شده را همراه عنوان و توضیح آن نمایش می‌دهد. */
 function StaticSection({icon, title, description, children}) {
     return (
         <section
@@ -1073,7 +1077,6 @@ function StaticSection({icon, title, description, children}) {
     );
 }
 
-/** اسلاید آموزشی را به‌صورت iframe آپارات یا جای‌نگهدار قابل‌تعویض نمایش می‌دهد. */
 function TutorialSlide({slide, index, t}) {
     if (slide.aparatUrl) {
         return (
