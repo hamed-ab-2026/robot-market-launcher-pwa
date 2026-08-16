@@ -65,7 +65,7 @@ const EMPTY_DEVICE = {
     password: ""
 };
 const MIN_NEW_PASSWORD_LENGTH = 8;
-const DEVICE_STATUS_INTERVAL_MS = 10 * 60_000;
+const DEVICE_STATUS_INTERVAL_MS = 2 * 60_000;
 const IP_CHANGE_RELOAD_DELAY_MS = 2_500;
 
 
@@ -659,7 +659,8 @@ export default function MainHub() {
             <header
                 className="sticky top-0 z-20 border-b border-emerald-100/70 bg-[#f3fbf9]/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
                 <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
-                    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-emerald-100 dark:bg-slate-900 dark:ring-slate-800">
+                    <div
+                        className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-emerald-100 dark:bg-slate-900 dark:ring-slate-800">
                         <RobotMascot variant="robot" className="h-9 w-9"/>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -690,7 +691,8 @@ export default function MainHub() {
                     {t("hub.receiveBaseInfo")}
                 </Button>
 
-                <div className="hidden overflow-x-auto rounded-2xl bg-white p-2 shadow-sm ring-1 ring-emerald-100/60 dark:bg-slate-900 dark:ring-slate-800 sm:block">
+                <div
+                    className="hidden overflow-x-auto rounded-2xl bg-white p-2 shadow-sm ring-1 ring-emerald-100/60 dark:bg-slate-900 dark:ring-slate-800 sm:block">
                     <Radio.Group
                         value={activeHubSection}
                         buttonStyle="solid"
@@ -705,7 +707,8 @@ export default function MainHub() {
                     </Radio.Group>
                 </div>
 
-                <nav className="fixed inset-x-4 bottom-4 z-30 grid grid-cols-3 rounded-[24px] bg-white/95 p-2 shadow-2xl shadow-emerald-950/15 ring-1 ring-emerald-100 backdrop-blur-xl dark:bg-slate-900/95 dark:ring-slate-700 sm:hidden">
+                <nav
+                    className="fixed inset-x-4 bottom-4 z-30 grid grid-cols-3 rounded-[24px] bg-white/95 p-2 shadow-2xl shadow-emerald-950/15 ring-1 ring-emerald-100 backdrop-blur-xl dark:bg-slate-900/95 dark:ring-slate-700 sm:hidden">
                     {[
                         {key: "devices", icon: <ApiOutlined/>, label: t("hub.deviceManagement.title")},
                         {key: "apps", icon: <AppstoreOutlined/>, label: t("hub.usefulApps.title")},
@@ -745,7 +748,8 @@ export default function MainHub() {
                         {[1, 2, 3, 4].map((item) =>
                             <div key={item}
                                  className="rounded-3xl bg-[#f7faf9] p-5 text-center ring-1 ring-emerald-100/70 transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-800 dark:ring-slate-700">
-                                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><AppstoreOutlined/></span>
+                                <span
+                                    className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><AppstoreOutlined/></span>
                                 <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                     {t("hub.usefulApps.placeholder", {number: item})}
                                 </p>
@@ -866,15 +870,15 @@ export default function MainHub() {
 
             </main>
 
-            {/*<button*/}
-            {/*    type="button"*/}
-            {/*    aria-label={t("hub.support.open")}*/}
-            {/*    onClick={() => setChatOpen(true)}*/}
-            {/*    className="fixed bottom-6 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">*/}
-            {/*    <MessageOutlined/>*/}
-            {/*</button>*/}
+            {/* <button
+                type="button"
+                aria-label={t("hub.support.open")}
+                onClick={() => setChatOpen(true)}
+                className="fixed bottom-28 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">
+                <MessageOutlined/>
+            </button>*/}
 
-            <Modal title={t("hub.support.title")} open={chatOpen} footer={null}
+            <Modal centered={true} title={t("hub.support.title")} open={chatOpen} footer={null}
                    onCancel={() => setChatOpen(false)}>
                 <div className="mb-4 h-64 overflow-y-auto rounded-2xl bg-slate-50 p-4 dark:bg-slate-800">
                     {chatMessages.length === 0 ?
@@ -900,7 +904,7 @@ export default function MainHub() {
                 <p className="mt-2 text-xs text-slate-400">{t("hub.support.demoHint")}</p>
             </Modal>
 
-            <Modal title={t("hub.advanced.title")} open={Boolean(advancedDevice)} footer={null}
+            <Modal centered={true} title={t("hub.advanced.title")} open={Boolean(advancedDevice)} footer={null}
                    onCancel={() => setAdvancedDevice(null)}>
                 {advancedDevice &&
                     <div className="grid gap-3">
@@ -916,6 +920,7 @@ export default function MainHub() {
             </Modal>
 
             <Modal
+                centered={true}
                 title={t("hub.passwordChange.title")}
                 open={Boolean(passwordChangeContext)}
                 confirmLoading={isChangingPassword}
@@ -970,6 +975,7 @@ export default function MainHub() {
             </Modal>
 
             <Modal
+                centered={true}
                 title={t("hub.onlineModal.title")}
                 open={onlineModalOpen}
                 confirmLoading={isSaving}
@@ -994,6 +1000,7 @@ export default function MainHub() {
             </Modal>
 
             <Modal
+                centered={true}
                 title={t(editingDevice ? "hub.deviceForm.editTitle" : "hub.deviceForm.addTitle")}
                 open={deviceModalOpen}
                 confirmLoading={isSaving}
@@ -1047,7 +1054,6 @@ export default function MainHub() {
 }
 
 
-/** کارت معرفی مشترک پنل آنلاین و آفلاین را رندر می‌کند تا ساختار و ظاهر آن‌ها تکرار نشود. */
 function PanelCard({
                        icon,
                        title,

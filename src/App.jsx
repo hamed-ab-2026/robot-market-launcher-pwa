@@ -12,10 +12,7 @@ import {lockSession} from "./store/slices/authSlice";
 
 const AUTO_LOCK_HIDDEN_MS = 2 * 60 * 1000;
 
-/**
- * ریشه رابط کاربری برنامه است و تم، جهت زبان، قفل نشست و شرط اجرای PWA را کنار هم قرار می‌دهد.
- * اگر برنامه نصب نشده باشد راهنمای نصب نمایش داده می‌شود؛ در غیر این صورت Router اصلی اجرا می‌شود.
- */
+
 export default function App() {
     const dispatch = useDispatch();
     const {i18n} = useTranslation();

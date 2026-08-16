@@ -17,13 +17,13 @@ export default defineConfig({
             includeAssets: ["icons/icon-192.png", "icons/icon-512.png"],
             manifest: {
                 id: "/",
-                name: "Robot Market Manager",
+                name: "Robot Market",
                 short_name: "RobotMarket",
                 description: "Professional hardware management dashboard for robot Market",
                 lang: "fa",
                 dir: "rtl",
                 theme_color: "#00A693",
-                background_color: "#f2fffd",
+                background_color: "#00A693",
 
 
                 display: "standalone",

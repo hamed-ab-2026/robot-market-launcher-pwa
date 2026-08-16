@@ -45,3 +45,47 @@ select {
 ::-webkit-scrollbar-track {
     @apply bg-transparent;
 }
+
+/* Mobile modals behave like native bottom sheets. */
+@media (max-width: 639px) {
+    .ant-modal-root .ant-modal-wrap {
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+
+    .ant-modal-root .ant-modal {
+        top: auto;
+        width: 100% !important;
+        max-width: 100%;
+        margin: 0;
+        padding-bottom: 0;
+        transform-origin: center bottom;
+    }
+
+    .ant-modal-root .ant-modal-content {
+        max-height: 88dvh;
+        overflow-y: auto;
+        border-radius: 28px 28px 0 0;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        box-shadow: 0 -18px 50px -24px rgba(0, 92, 78, 0.35);
+    }
+
+    .ant-modal-root .ant-modal-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding-top: 4px;
+        background: inherit;
+    }
+
+    .ant-modal-root .ant-modal-title::before {
+        display: block;
+        width: 42px;
+        height: 4px;
+        margin: 0 auto 16px;
+        border-radius: 999px;
+        background: #cbd5e1;
+        content: "";
+    }
+}

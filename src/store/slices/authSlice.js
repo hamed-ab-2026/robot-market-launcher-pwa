@@ -50,7 +50,6 @@ export const unlockWithPasscode = createAsyncThunk(
 );
 
 
-/** پس از تأیید موفق WebAuthn، فقط وضعیت نشست Redux را به حالت باز تغییر می‌دهد. */
 export const unlockWithBiometrics = createAsyncThunk(
     "auth/unlockWithBiometrics",
     async () => true
