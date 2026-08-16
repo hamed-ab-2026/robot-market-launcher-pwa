@@ -655,13 +655,16 @@ export default function MainHub() {
         [t, deviceActionLoading, deviceStatuses]);
 
     return (
-        <div className="min-h-screen bg-surface-light pb-10 dark:bg-surface-dark">
+        <div className="min-h-screen bg-[#f3fbf9] pb-28 dark:bg-surface-dark sm:pb-12">
             <header
-                className="sticky top-0 z-20 border-b border-white/70 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85">
-                <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-                    <RobotMascot variant="robot" className="h-10 w-10 flex-none"/>
+                className="sticky top-0 z-20 border-b border-emerald-100/70 bg-[#f3fbf9]/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
+                <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4 sm:px-6">
+                    <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-emerald-100 dark:bg-slate-900 dark:ring-slate-800">
+                        <RobotMascot variant="robot" className="h-9 w-9"/>
+                    </div>
                     <div className="min-w-0 flex-1">
-                        <h1 className="truncate font-bold text-slate-800 dark:text-white">{t("hub.title")}</h1>
+                        <p className="text-[11px] font-medium text-brand-600 dark:text-brand-300">{t("hub.welcomeTitle")}</p>
+                        <h1 className="truncate text-base font-bold text-slate-900 dark:text-white">{t("hub.title")}</h1>
                     </div>
                     <div className="hidden md:block"><PersianDateTime/></div>
                     <Button
@@ -676,7 +679,7 @@ export default function MainHub() {
                 </div>
             </header>
 
-            <main className="mx-auto  max-w-6xl space-y-5 px-4 pt-5 sm:px-6">
+            <main className="mx-auto max-w-6xl space-y-5 px-4 pt-5 sm:px-6 sm:pt-7">
 
                 <Button
                     block
@@ -687,7 +690,7 @@ export default function MainHub() {
                     {t("hub.receiveBaseInfo")}
                 </Button>
 
-                <div className="overflow-x-auto rounded-2xl bg-white p-2 shadow-sm dark:bg-slate-900">
+                <div className="hidden overflow-x-auto rounded-2xl bg-white p-2 shadow-sm ring-1 ring-emerald-100/60 dark:bg-slate-900 dark:ring-slate-800 sm:block">
                     <Radio.Group
                         value={activeHubSection}
                         buttonStyle="solid"
@@ -701,6 +704,27 @@ export default function MainHub() {
                         </Radio.Button>
                     </Radio.Group>
                 </div>
+
+                <nav className="fixed inset-x-4 bottom-4 z-30 grid grid-cols-3 rounded-[24px] bg-white/95 p-2 shadow-2xl shadow-emerald-950/15 ring-1 ring-emerald-100 backdrop-blur-xl dark:bg-slate-900/95 dark:ring-slate-700 sm:hidden">
+                    {[
+                        {key: "devices", icon: <ApiOutlined/>, label: t("hub.deviceManagement.title")},
+                        {key: "apps", icon: <AppstoreOutlined/>, label: t("hub.usefulApps.title")},
+                        {key: "tutorial", icon: <PlayCircleOutlined/>, label: t("hub.tutorial.title")}
+                    ].map((item) =>
+                        <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => setActiveHubSection(item.key)}
+                            className={`flex min-w-0 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold transition ${
+                                activeHubSection === item.key ?
+                                    "bg-brand-500 text-white shadow-md shadow-brand-500/25" :
+                                    "text-slate-400 dark:text-slate-500"
+                            }`}>
+                            <span className="text-lg">{item.icon}</span>
+                            <span className="w-full truncate">{item.label}</span>
+                        </button>
+                    )}
+                </nav>
 
                 {activeHubSection === "tutorial" && <StaticSection
                     icon={<PlayCircleOutlined/>}
@@ -720,8 +744,8 @@ export default function MainHub() {
                     <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
                         {[1, 2, 3, 4].map((item) =>
                             <div key={item}
-                                 className="rounded-2xl border border-dashed border-slate-300 p-5 text-center dark:border-slate-700">
-                                <AppstoreOutlined className="text-3xl text-brand-500"/>
+                                 className="rounded-3xl bg-[#f7faf9] p-5 text-center ring-1 ring-emerald-100/70 transition hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-800 dark:ring-slate-700">
+                                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300"><AppstoreOutlined/></span>
                                 <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">
                                     {t("hub.usefulApps.placeholder", {number: item})}
                                 </p>
@@ -736,7 +760,7 @@ export default function MainHub() {
                     description={t("hub.deviceManagement.description")}>
                     <div className="p-4 sm:p-5">
                         <article
-                            className="flex flex-col items-stretch gap-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:p-5">
+                            className="relative flex flex-col items-stretch gap-4 overflow-hidden rounded-[26px] bg-gradient-to-br from-brand-50 via-white to-emerald-50 p-4 ring-1 ring-brand-100 dark:from-brand-950/50 dark:via-slate-900 dark:to-slate-900 dark:ring-brand-900 sm:flex-row sm:items-center sm:p-5">
                             <div className="flex min-w-0 flex-1 items-center gap-4">
                                 <div
                                     className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
@@ -1036,7 +1060,7 @@ function PanelCard({
                    }) {
     return (
         <article
-            className="flex flex-col items-stretch gap-4 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:p-5">
+            className="flex flex-col items-stretch gap-4 rounded-[26px] bg-[#f7faf9] p-4 ring-1 ring-emerald-100/70 transition hover:shadow-md dark:bg-slate-800 dark:ring-slate-700 sm:flex-row sm:items-center sm:p-5">
             <div className="flex min-w-0 flex-1 items-center gap-4">
                 <div
                     className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl bg-brand-50 text-2xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
@@ -1061,7 +1085,7 @@ function PanelCard({
 function StaticSection({icon, title, description, children}) {
     return (
         <section
-            className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            className="overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_-30px_rgba(0,92,78,0.35)] ring-1 ring-emerald-100/70 dark:bg-slate-900 dark:ring-slate-800">
             <div className="flex w-full items-center gap-3 p-4 text-start sm:p-5">
                 <span
                     className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-brand-50 text-xl text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
@@ -1072,7 +1096,7 @@ function StaticSection({icon, title, description, children}) {
                     <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{description}</span>
                 </span>
             </div>
-            <div className="border-t border-slate-100 dark:border-slate-800">{children}</div>
+            <div className="border-t border-emerald-50 dark:border-slate-800">{children}</div>
         </section>
     );
 }

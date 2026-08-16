@@ -52,7 +52,8 @@ export default function App() {
                 token: {
                     colorPrimary: "#00A693",
                     colorBgBase: darkMode ? "#0b1615" : "#f2fffd",
-                    borderRadius: 10,
+                    borderRadius: 16,
+                    controlHeight: 40,
                     fontFamily: "Vazirmatn, system-ui, sans-serif"
                 }
             }}>

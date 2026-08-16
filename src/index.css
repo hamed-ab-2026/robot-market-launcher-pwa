@@ -18,7 +18,18 @@ body,
 
 
 body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased text-slate-800 dark:text-slate-100;
+    background:
+        radial-gradient(circle at 15% 0%, rgba(103, 232, 211, 0.18), transparent 28rem),
+        #f3fbf9;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Thin, brand-colored scrollbar — purely cosmetic, safe to remove */
