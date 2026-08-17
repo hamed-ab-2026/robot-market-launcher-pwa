@@ -27,7 +27,7 @@
     "unlockTitle": "باز کردن قفل",
     "unlockSubtitle": "رمز عبور خود را وارد کنید",
     "biometricPrompt": "یا از اثر انگشت / فیس‌آیدی استفاده کنید",
-    "biometricButton": "ورود با بیومتریک",
+    "biometricButton": "ورود با اثرانگشت",
     "biometricSetupTitle": "فعال‌سازی ورود با اثر انگشت",
     "biometricSetupDescription": "آیا می‌خواهید اثر انگشت، فیس‌آیدی یا Windows Hello را برای این برنامه تنظیم کنید؟",
     "biometricSetupConfirm": "بله، تنظیم شود",

@@ -4,17 +4,12 @@ import {useCallback, useEffect, useState} from "react";
 const CREDENTIAL_ID_KEY = "app_webauthn_credential_id";
 
 
-/**
- * پشتیبانی دستگاه از احراز هویت داخلی مانند اثرانگشت، Face ID یا Windows Hello را بررسی می‌کند.
- * بررسی ناهمگام است و نتیجه تنها تا زمانی ثبت می‌شود که کامپوننت همچنان Mount باشد.
- */
 export function useWebAuthnAvailability() {
     const [isAvailable, setIsAvailable] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
 
-        /** وجود API و یک Platform Authenticator قابل استفاده را از خود مرورگر سؤال می‌کند. */
         async function check() {
             const supported =
                 typeof window !== "undefined" &&
@@ -75,7 +70,6 @@ export function useWebAuthn() {
     }, []);
 
 
-    /** با Credential قبلی از سیستم‌عامل درخواست تأیید هویت می‌کند و موفقیت Assertion را برمی‌گرداند. */
     const authenticateBiometric = useCallback(async () => {
         const storedId = localStorage.getItem(CREDENTIAL_ID_KEY);
         if (!storedId) {

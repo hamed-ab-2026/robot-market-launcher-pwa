@@ -7,7 +7,7 @@ import AuthPage from "../pages/AuthPage";
 import MainHub from "../pages/MainHub";
 
 
-const SPLASH_DURATION_MS = 3000;
+const SPLASH_DURATION_MS = 5000;
 
 
 function RequireUnlock({children}) {

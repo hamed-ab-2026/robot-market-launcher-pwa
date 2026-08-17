@@ -1,34 +1,47 @@
 import React from "react";
 import {useTranslation} from "react-i18next";
-import RobotMascot from "../components/common/RobotMascot";
 
 
 export default function SplashScreen() {
     const {t} = useTranslation();
 
     return (
-        <div
-            className="fixed inset-0 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-brand-500 to-brand-700">
+        <div className="splash-screen" role="status" aria-live="polite">
+            <div className="splash-glow splash-glow-start"/>
+            <div className="splash-glow splash-glow-end"/>
 
-            <div className="animate-pulse-logo">
-                <div
-                    className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white/95 p-3 shadow-2xl shadow-black/20">
-                    <RobotMascot variant="robot" className="h-full w-full"/>
+            <div className="splash-avatar-stage" aria-hidden="true">
+                <span className="splash-orbit splash-orbit-one"/>
+                <span className="splash-orbit splash-orbit-two"/>
+                <div className="splash-avatar-shadow"/>
+
+                <div className="splash-avatar">
+                    <span className="splash-antenna">
+                        <span/>
+                    </span>
+                    <div className="splash-avatar-face">
+                        <div className="splash-avatar-eyes">
+                            <span className="splash-avatar-eye"/>
+                            <span className="splash-avatar-eye"/>
+                        </div>
+                        <span className="splash-avatar-smile"/>
+                    </div>
+                    <span className="splash-avatar-signal splash-avatar-signal-one"/>
+                    <span className="splash-avatar-signal splash-avatar-signal-two"/>
                 </div>
             </div>
 
-            <div className="text-center">
+            <div className="relative z-10 text-center">
                 <h1 className="text-2xl font-bold tracking-wide text-white">{t("app.name")}</h1>
                 <p className="mt-1 text-sm text-white/80">{t("splash.tagline")}</p>
             </div>
 
-
-            <div className="flex gap-1.5">
+            <div className="relative z-10 flex gap-1.5" aria-hidden="true">
                 {[0, 1, 2].map((i) =>
                     <span
                         key={i}
-                        className="h-1.5 w-1.5 rounded-full bg-white/80 animate-pulse-logo"
-                        style={{animationDelay: `${i * 0.2}s`}}/>
+                        className="splash-loading-dot"
+                        style={{animationDelay: `${i * 0.16}s`}}/>
                 )}
             </div>
         </div>);

@@ -23,7 +23,7 @@ export default defineConfig({
                 lang: "fa",
                 dir: "rtl",
                 theme_color: "#00A693",
-                background_color: "#00A693",
+                background_color: "#000000",
 
 
                 display: "standalone",
