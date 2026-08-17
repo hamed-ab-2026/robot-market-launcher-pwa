@@ -24,7 +24,6 @@ function RequireUnlock({children}) {
 export default function AppRouter() {
     const [splashDone, setSplashDone] = useState(false);
 
-
     useEffect(() => {
         const timer = setTimeout(() => setSplashDone(true), SPLASH_DURATION_MS);
         return () => clearTimeout(timer);
@@ -54,7 +53,6 @@ export default function AppRouter() {
                         <Navigate to="/hub" replace/>
                     </RequireUnlock>
                 }/>
-
 
             <Route path="*" element={<Navigate to="/" replace/>}/>
 
