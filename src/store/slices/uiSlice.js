@@ -9,7 +9,6 @@ function readPersistedDarkMode() {
     try {
         return localStorage.getItem(DARK_MODE_STORAGE_KEY) === "true";
     } catch {
-
         return false;
     }
 }
