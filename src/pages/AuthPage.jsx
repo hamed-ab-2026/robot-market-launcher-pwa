@@ -9,7 +9,7 @@ import PasscodeDots from "../components/auth/PasscodeDots";
 import RobotMascot from "../components/common/RobotMascot";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
-import {setupPasscode, unlockWithPasscode, unlockWithBiometrics} from "../store/slices/authSlice";
+import {resetAttempts, setupPasscode, unlockWithPasscode, unlockWithBiometrics} from "../store/slices/authSlice";
 import {useWebAuthn, useWebAuthnAvailability} from "../hooks/useWebAuthn";
 
 
@@ -59,6 +59,12 @@ export default function AuthPage() {
     }, [lockedUntil]);
 
     const isLockedOut = remainingLockSeconds > 0;
+
+    useEffect(() => {
+        if (lockedUntil && remainingLockSeconds === 0 && Date.now() >= lockedUntil) {
+            dispatch(resetAttempts());
+        }
+    }, [dispatch, lockedUntil, remainingLockSeconds]);
 
 
     const triggerError = useCallback((errorMessage) => {

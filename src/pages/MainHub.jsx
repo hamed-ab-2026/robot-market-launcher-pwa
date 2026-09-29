@@ -36,13 +36,14 @@ import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
 import RobotMascot from "../components/common/RobotMascot";
 import PersianDateTime from "../components/common/PersianDateTime";
-import {useConnectivityStatus} from "../hooks/useConnectivityStatus";
 import {
     buildDeviceBaseUrl,
+    changeDevicePassword,
+    DeviceFormModal,
+    EMPTY_DEVICE,
+    loginToDevice,
     loginToOnlinePanel,
-    resolveDeviceInfo
-} from "../services/deviceApi";
-import {
+    resolveDeviceInfo,
     deleteDevice,
     getEditableDevice,
     getEditableOnlinePanel,
@@ -51,28 +52,13 @@ import {
     saveDevice,
     saveOnlinePanel,
     updateDeviceMetadata
-} from
-        "../services/hubStorage";
+} from "../features/devices";
+import {useConnectivityStatus} from "../hooks/useConnectivityStatus";
 
 const ONLINE_PANEL_URL = "https://panel.my-rm.com/login";
-const EMPTY_DEVICE = {
-    serial: "",
-    installationLocation: "",
-    type: "",
-    plateSerial: "",
-    ipAddress: "",
-    username: "",
-    password: ""
-};
 const MIN_NEW_PASSWORD_LENGTH = 8;
 const DEVICE_STATUS_INTERVAL_MS = 2 * 60_000;
 const IP_CHANGE_RELOAD_DELAY_MS = 2_500;
-
-
-function isValidIpv4(value) {
-    const parts = String(value || "").trim().split(".");
-    return parts.length === 4 && parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255);
-}
 
 
 const TUTORIAL_SLIDES = [
@@ -466,17 +452,7 @@ export default function MainHub() {
         const baseUrl = buildDeviceBaseUrl(deviceWithCredentials);
 
         try {
-            const response = await fetch(`${baseUrl}/api/login`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({username, password})
-            });
-
-            if (!response.ok) {
-                throw new Error(`API_ERROR_${response.status}`);
-            }
-
-            const loginResult = await response.json();
+            const loginResult = await loginToDevice({baseUrl, username, password});
 
             if (!loginResult?.success) {
                 throw new Error("DEVICE_LOGIN_REJECTED");
@@ -531,21 +507,12 @@ export default function MainHub() {
 
         setIsChangingPassword(true);
         try {
-            const response = await fetch(`${baseUrl}/api/change-password`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    username,
-                    oldPassword: values.oldPassword,
-                    newPassword: values.newPassword
-                })
+            const result = await changeDevicePassword({
+                baseUrl,
+                username,
+                oldPassword: values.oldPassword,
+                newPassword: values.newPassword
             });
-
-            if (!response.ok) {
-                throw new Error(`API_ERROR_${response.status}`);
-            }
-
-            const result = await response.json();
             if (!result?.success || !result.token) {
                 throw new Error("PASSWORD_CHANGE_REJECTED");
             }
@@ -999,56 +966,16 @@ export default function MainHub() {
                 </Form>
             </Modal>
 
-            <Modal
-                centered={true}
-                title={t(editingDevice ? "hub.deviceForm.editTitle" : "hub.deviceForm.addTitle")}
-                open={deviceModalOpen}
-                confirmLoading={isSaving}
-                okText={t("common.confirm")}
-                cancelText={t("common.cancel")}
-                onOk={handleSaveDevice}
+            <DeviceFormModal
+                form={deviceForm}
+                editingDevice={editingDevice}
+                isOpen={deviceModalOpen}
+                isSaving={isSaving}
+                isQuerying={isQueryingSerial}
                 onCancel={() => setDeviceModalOpen(false)}
-                destroyOnClose>
-
-                <Form form={deviceForm} layout="vertical" initialValues={EMPTY_DEVICE}>
-                    <Form.Item
-                        label={t("hub.fields.serial")}>
-                        <Space.Compact block>
-                            <Form.Item required={true} name="serial" noStyle rules={[{required: true}]}>
-                                <Input dir="ltr" placeholder="SN404023"/>
-                            </Form.Item>
-                            <Button loading={isQueryingSerial} onClick={() => queryDeviceBySerial()}>
-                                {t("hub.deviceForm.query")}
-                            </Button>
-                        </Space.Compact>
-                    </Form.Item>
-                    <Form.Item name="installationLocation" label={t("hub.fields.installationLocation")}>
-                        <Input placeholder={t("hub.placeholders.installationLocation")}/>
-                    </Form.Item>
-                    <Form.Item
-                        name="ipAddress"
-                        label={t("hub.fields.ipAddress")}
-                        extra={t("hub.deviceForm.ipHint")}
-                        rules={[
-                            () => ({
-                                validator(_, value) {
-                                    return !value || isValidIpv4(value) ? Promise.resolve() :
-                                        Promise.reject(new Error(t("hub.deviceForm.ipInvalid")));
-                                }
-                            })
-                        ]}>
-                        <Input dir="ltr" placeholder="192.168.4.1"/>
-                    </Form.Item>
-                    <Form.Item name="username" label={t("hub.fields.username")}>
-                        <Input autoComplete="username" placeholder={t("hub.placeholders.username")}/>
-                    </Form.Item>
-                    <Form.Item name="password" label={t("hub.fields.password")}>
-                        <Input.Password autoComplete="new-password" placeholder={t("hub.placeholders.password")}/>
-                    </Form.Item>
-                    <Form.Item name="type" hidden><Input/></Form.Item>
-                    <Form.Item name="plateSerial" hidden><Input/></Form.Item>
-                </Form>
-            </Modal>
+                onQuery={() => queryDeviceBySerial()}
+                onSubmit={handleSaveDevice}
+                t={t}/>
         </div>);
 
 }

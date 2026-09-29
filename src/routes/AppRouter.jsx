@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from "react";
+import React, {lazy, Suspense, useState, useEffect} from "react";
 import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import {useSelector} from "react-redux";
 
-import SplashScreen from "../pages/SplashScreen";
-import AuthPage from "../pages/AuthPage";
-import MainHub from "../pages/MainHub";
+const SplashScreen = lazy(() => import("../pages/SplashScreen"));
+const AuthPage = lazy(() => import("../pages/AuthPage"));
+const MainHub = lazy(() => import("../pages/MainHub"));
 
 
 const SPLASH_DURATION_MS = 5000;
@@ -29,12 +29,9 @@ export default function AppRouter() {
         return () => clearTimeout(timer);
     }, []);
 
-    if (!splashDone) {
-        return <SplashScreen/>;
-    }
-
     return (
-        <Routes>
+        <Suspense fallback={<div className="min-h-screen bg-surface-light dark:bg-surface-dark"/>}>
+            {!splashDone ? <SplashScreen/> : <Routes>
 
             <Route path="/auth" element={<AuthPage/>}/>
 
@@ -56,7 +53,8 @@ export default function AppRouter() {
 
             <Route path="*" element={<Navigate to="/" replace/>}/>
 
-        </Routes>
+            </Routes>}
+        </Suspense>
     );
 
 }
