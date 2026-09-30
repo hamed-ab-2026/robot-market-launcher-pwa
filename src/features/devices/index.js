@@ -1,4 +1,5 @@
 export {default as DeviceFormModal, EMPTY_DEVICE} from "./components/DeviceFormModal";
+export {default as DeviceTable} from "./components/DeviceTable";
 export {
     buildDeviceBaseUrl,
     changeDevicePassword,
@@ -18,3 +19,8 @@ export {
     saveOnlinePanel,
     updateDeviceMetadata
 } from "./storage/device.storage";
+export {
+    buildDeviceOpenLoadingKey,
+    canOpenDevice,
+    getDeviceStatusColor
+} from "./utils/deviceStatus";

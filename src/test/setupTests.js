@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
+const getComputedStyle = window.getComputedStyle;
+
 Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: (query) => ({
@@ -13,3 +15,11 @@ Object.defineProperty(window, "matchMedia", {
         dispatchEvent: vi.fn()
     })
 });
+
+global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+};
+
+window.getComputedStyle = (element) => getComputedStyle(element);

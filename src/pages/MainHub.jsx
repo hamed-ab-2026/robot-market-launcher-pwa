@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {
     Button,
@@ -10,9 +10,7 @@ import {
     Modal,
     Radio,
     Space,
-    Table,
-    Tag,
-    Tooltip
+    Tag
 } from
         "antd";
 import {
@@ -27,7 +25,6 @@ import {
     PlayCircleOutlined,
     ReloadOutlined,
     SafetyCertificateOutlined,
-    SettingOutlined,
     WifiOutlined
 } from
         "@ant-design/icons";
@@ -40,6 +37,7 @@ import {
     buildDeviceBaseUrl,
     changeDevicePassword,
     DeviceFormModal,
+    DeviceTable,
     EMPTY_DEVICE,
     loginToDevice,
     loginToOnlinePanel,
@@ -51,7 +49,8 @@ import {
     loadOnlinePanel,
     saveDevice,
     saveOnlinePanel,
-    updateDeviceMetadata
+    updateDeviceMetadata,
+    buildDeviceOpenLoadingKey
 } from "../features/devices";
 import {useConnectivityStatus} from "../hooks/useConnectivityStatus";
 
@@ -224,7 +223,7 @@ export default function MainHub() {
         await startOnlineLogin(openMode);
     }
 
-    /** از آداپتور API توکن ورود می‌گیرد و نشانی برگشتی را در حالت انتخاب‌شده باز می‌کند. */
+    /** Logs in to the online panel service and opens the returned URL in the selected mode. */
     async function startOnlineLogin(openMode, providedCredentials = null) {
         let credentials = providedCredentials;
         try {
@@ -288,7 +287,7 @@ export default function MainHub() {
     }
 
 
-    /** وضعیت و فرم را برای ساخت یک دستگاه تازه پاک‌سازی می‌کند و مودال را باز می‌کند. */
+    /** Resets the device form for a new record and opens the editor modal. */
     function openAddDevice() {
         setEditingDevice(null);
         deviceForm.resetFields();
@@ -297,7 +296,7 @@ export default function MainHub() {
     }
 
 
-    /** دستگاه انتخاب‌شده را رمزگشایی و همه فیلدهای آن را برای ویرایش در فرم بارگذاری می‌کند. */
+    /** Decrypts the selected device credentials and loads all editable fields into the form. */
     async function openEditDevice(device) {
         setEditingDevice(device);
         try {
@@ -381,14 +380,14 @@ export default function MainHub() {
     }
 
 
-    /** دستگاه تأییدشده را حذف و فهرست قابل مشاهده را از حافظه محلی بازخوانی می‌کند. */
+    /** Deletes a confirmed device and refreshes the visible list from local storage. */
     function handleDeleteDevice(deviceId) {
         deleteDevice(deviceId);
         setDevices(loadDevices());
         message.success(t("hub.messages.deviceDeleted"));
     }
 
-    /** پیام پشتیبانی را فعلاً در نشست جاری نگه می‌دارد تا بعداً به API واقعی چت متصل شود. */
+    /** Stores demo support messages locally until a real chat API is available. */
     function sendSupportMessage() {
         const text = chatText.trim();
         if (!text) return;
@@ -396,7 +395,7 @@ export default function MainHub() {
         setChatText("");
     }
 
-    /** پیش از اجرای هر عملیات حساس دستگاه، تأیید صریح کاربر را دریافت می‌کند. */
+    /** Requests explicit confirmation before running a sensitive device action. */
     function confirmDeviceAction({title, danger = false, action}) {
         Modal.confirm({
             title,
@@ -407,7 +406,7 @@ export default function MainHub() {
         });
     }
 
-    /** عملیات انتخاب‌شده را پس از تأیید اجرا و مودال تنظیمات پیشرفته را می‌بندد. */
+    /** Closes advanced settings before delegating a confirmed device action. */
     function runAdvancedAction(config) {
         setAdvancedDevice(null);
         confirmDeviceAction(config);
@@ -415,8 +414,8 @@ export default function MainHub() {
 
 
     /**
-     * TODO: بعد از آماده‌شدن API حساب کاربری، این تابع باید همه دستگاه‌هایی را دریافت کند
-     * که حساب واردشده مالک آن‌هاست؛ پاسخ آینده شامل تمام فیلدهای کامل هر دستگاه خواهد بود.
+     * TODO: Replace this placeholder with the account-owned device sync endpoint
+     * when the backend returns complete device records for the signed-in user.
      */
     async function refreshBaseInformation() {
         setIsRefreshing(true);
@@ -489,7 +488,7 @@ export default function MainHub() {
     }
 
     async function runDeviceOpen(device, openMode) {
-        const key = `${device.id}:${openMode}`;
+        const key = buildDeviceOpenLoadingKey(device.id, openMode);
         setDeviceActionLoading((current) => ({...current, [key]: true}));
         try {
             await loginThenOpenDevice(device, openMode);
@@ -517,7 +516,7 @@ export default function MainHub() {
                 throw new Error("PASSWORD_CHANGE_REJECTED");
             }
 
-            // فقط بعد از تأیید API، رمز جدید جایگزین رمز رمزنگاری‌شده قبلی می‌شود.
+            // Persist the new encrypted password only after the device confirms the change.
             await saveDevice({
                 ...device,
                 username,
@@ -561,65 +560,6 @@ export default function MainHub() {
             window.location.assign(panelUrl);
         }
     }
-
-    const columns = useMemo(() => [
-            {
-                title: t("hub.table.device"),
-                dataIndex: "name",
-                key: "name",
-                width: 120,
-                render: (name, device) =>
-                    <div>
-                        <div className="font-semibold text-slate-800 dark:text-white">{name}</div>
-                        <div className="mt-1 text-xs text-slate-400" dir="ltr">{buildDeviceBaseUrl(device)}</div>
-                    </div>
-
-            },
-            {
-                title: t("hub.table.serial"),
-                dataIndex: "serial",
-                key: "serial",
-                width: 80,
-                render: (serial) => <span dir="ltr">{serial}</span>
-            },
-            {
-                title: t("hub.table.status"),
-                key: "status",
-                width: 90,
-                render: (_, device) => {
-                    const status = deviceStatuses[device.id] || "checking";
-                    const color = status === "active" ? "green" : status === "inactive" ? "red" : "gold";
-                    return <Tag color={color}>{t(`hub.deviceStatus.${status}`)}</Tag>;
-                }
-            },
-            {
-                title: t("hub.table.actions"),
-                key: "actions",
-                width: 132,
-                render: (_, device) =>
-                    <Space size="middle" wrap={false}>
-                        <Tooltip title={t("hub.actions.iframe")}>
-                            <Button type="text" className="text-lg" icon={<DesktopOutlined/>}
-                                    loading={deviceActionLoading[`${device.id}:iframe`]}
-                                    disabled={deviceStatuses[device.id] !== "active" ||
-                                        deviceActionLoading[`${device.id}:direct`]}
-                                    onClick={() => runDeviceOpen(device, "iframe")}/>
-                        </Tooltip>
-                        <Tooltip title={t("hub.actions.direct")}>
-                            <Button type="text" className="text-lg" icon={<LinkOutlined/>}
-                                    loading={deviceActionLoading[`${device.id}:direct`]}
-                                    disabled={deviceStatuses[device.id] !== "active" ||
-                                        deviceActionLoading[`${device.id}:iframe`]}
-                                    onClick={() => runDeviceOpen(device, "direct")}/>
-                        </Tooltip>
-                        <Tooltip title={t("hub.actions.advancedSettings")}>
-                            <Button type="text" className="text-lg" icon={<SettingOutlined/>}
-                                    onClick={() => setAdvancedDevice(device)}/>
-                        </Tooltip>
-                    </Space>
-
-            }],
-        [t, deviceActionLoading, deviceStatuses]);
 
     return (
         <div className="min-h-screen bg-[#f3fbf9] pb-28 dark:bg-surface-dark sm:pb-12">
@@ -798,10 +738,13 @@ export default function MainHub() {
                             <h3 className="font-bold text-slate-800 dark:text-white">{t("hub.deviceList")}</h3>
                             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("hub.deviceListDescription")}</p>
                         </div>
-                        <Table rowKey="id" columns={columns} dataSource={devices} pagination={false}
-                               tableLayout="fixed"
-                               scroll={{x: 422}}
-                               locale={{emptyText: <Empty description={t("hub.emptyDevices")}/>}}/>
+                        <DeviceTable
+                            devices={devices}
+                            deviceStatuses={deviceStatuses}
+                            deviceActionLoading={deviceActionLoading}
+                            onOpenDevice={runDeviceOpen}
+                            onOpenAdvancedSettings={setAdvancedDevice}
+                            t={t}/>
                     </div>
 
                     {iframeDevice &&
@@ -836,14 +779,6 @@ export default function MainHub() {
                 <div className="md:hidden "><PersianDateTime/></div>
 
             </main>
-
-            {/* <button
-                type="button"
-                aria-label={t("hub.support.open")}
-                onClick={() => setChatOpen(true)}
-                className="fixed bottom-28 end-6 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-2xl text-white shadow-xl shadow-brand-500/30 transition hover:bg-brand-600">
-                <MessageOutlined/>
-            </button>*/}
 
             <Modal centered={true} title={t("hub.support.title")} open={chatOpen} footer={null}
                    onCancel={() => setChatOpen(false)}>
