@@ -9,7 +9,8 @@ import PasscodeDots from "../components/auth/PasscodeDots";
 import RobotMascot from "../components/common/RobotMascot";
 import LanguageSwitcher from "../components/common/LanguageSwitcher";
 import ThemeToggle from "../components/common/ThemeToggle";
-import {resetAttempts, setupPasscode, unlockWithPasscode, unlockWithBiometrics} from "../store/slices/authSlice";
+import {setupPasscode, unlockWithPasscode, unlockWithBiometrics, selectAuthStatus} from "../store/slices/authSlice";
+import {useLockoutCountdown} from "../features/auth";
 import {useWebAuthn, useWebAuthnAvailability} from "../hooks/useWebAuthn";
 
 
@@ -22,10 +23,7 @@ export default function AuthPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const hasPasscode = useSelector((state) => state.auth.hasPasscode);
-    const attemptsRemaining = useSelector((state) => state.auth.attemptsRemaining);
-    const lockedUntil = useSelector((state) => state.auth.lockedUntil);
-    const isUnlocked = useSelector((state) => state.auth.isUnlocked);
+    const {hasPasscode, attemptsRemaining, lockedUntil, isUnlocked} = useSelector(selectAuthStatus);
 
     const {authenticateBiometric, registerBiometric, hasBiometricRegistered} = useWebAuthn();
     const isBiometricAvailable = useWebAuthnAvailability();
@@ -36,7 +34,7 @@ export default function AuthPage() {
 
     const [value, setValue] = useState("");
     const [isError, setIsError] = useState(false);
-    const [remainingLockSeconds, setRemainingLockSeconds] = useState(0);
+    const remainingLockSeconds = useLockoutCountdown(lockedUntil);
 
 
     useEffect(() => {
@@ -47,24 +45,7 @@ export default function AuthPage() {
     }, [isUnlocked, navigate, location.state]);
 
 
-    useEffect(() => {
-        if (!lockedUntil) {
-            setRemainingLockSeconds(0);
-            return;
-        }
-        const tick = () => setRemainingLockSeconds(Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000)));
-        tick();
-        const interval = setInterval(tick, 1000);
-        return () => clearInterval(interval);
-    }, [lockedUntil]);
-
     const isLockedOut = remainingLockSeconds > 0;
-
-    useEffect(() => {
-        if (lockedUntil && remainingLockSeconds === 0 && Date.now() >= lockedUntil) {
-            dispatch(resetAttempts());
-        }
-    }, [dispatch, lockedUntil, remainingLockSeconds]);
 
 
     const triggerError = useCallback((errorMessage) => {
@@ -95,7 +76,7 @@ export default function AuthPage() {
                 }
                 await dispatch(setupPasscode(enteredValue));
 
-                // قبل از نمایش درخواست سیستمی اثر انگشت، انتخاب کاربر را با یک پنجره شفاف دریافت می‌کنیم.
+                // Ask first so users understand why the browser biometric prompt appears.
                 if (isBiometricAvailable) {
                     Modal.confirm({
                         title: t("auth.biometricSetupTitle"),

@@ -6,7 +6,7 @@ const PASSCODE_HASH_KEY = "app_passcode_hash";
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 30 * 1000;
 
-/** هش PIN را با مدیریت خطای دسترسی از localStorage می‌خواند و در نبود آن null برمی‌گرداند. */
+/** Reads the persisted PIN hash while tolerating restricted storage access. */
 function readStoredHash() {
     try {
         return localStorage.getItem(PASSCODE_HASH_KEY);
@@ -17,8 +17,8 @@ function readStoredHash() {
 
 
 /**
- * PIN اولیه را هش و ذخیره می‌کند؛ مقدار خام PIN هیچ‌وقت در Redux یا localStorage قرار نمی‌گیرد.
- * Fulfilled شدن این عملیات باعث فعال شدن وضعیت hasPasscode و باز شدن نشست جاری می‌شود.
+ * Hashes the first PIN and stores only the hash.
+ * The raw PIN never enters Redux state or persistent storage.
  */
 export const setupPasscode = createAsyncThunk(
     "auth/setupPasscode",
@@ -31,8 +31,8 @@ export const setupPasscode = createAsyncThunk(
 
 
 /**
- * PIN واردشده را با هش ذخیره‌شده مقایسه می‌کند.
- * در صورت خطا کد مشخص برمی‌گرداند تا رابط کاربری بتواند پیام و محدودیت تلاش را مدیریت کند.
+ * Verifies an entered PIN against the stored hash and rejects with a stable
+ * code so the UI can show a friendly message and update the attempt counter.
  */
 export const unlockWithPasscode = createAsyncThunk(
     "auth/unlockWithPasscode",
@@ -64,8 +64,8 @@ const initialState = {
 };
 
 /**
- * Slice احراز هویت وضعیت باز بودن نشست، تعداد تلاش‌های باقی‌مانده و زمان قفل موقت را مدیریت می‌کند.
- * Reducerهای این بخش هیچ رمز خامی نگهداری نمی‌کنند و فقط نتیجه عملیات امنیتی را ثبت می‌کنند.
+ * Owns shared authentication state: session lock status, remaining attempts,
+ * and temporary lockout time. Reducers store security outcomes, never raw PINs.
  */
 const authSlice = createSlice({
     name: "auth",
@@ -107,4 +107,8 @@ const authSlice = createSlice({
 });
 
 export const {lockSession, resetAttempts} = authSlice.actions;
+
+export const selectAuthStatus = (state) => state.auth;
+export const selectIsUnlocked = (state) => state.auth.isUnlocked;
+
 export default authSlice.reducer;

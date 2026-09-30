@@ -5,6 +5,7 @@ import i18n, {LANGUAGE_STORAGE_KEY} from "../../i18n";
 const DARK_MODE_STORAGE_KEY = "app_dark_mode";
 
 
+/** Reads the saved color-scheme preference without breaking restricted storage modes. */
 function readPersistedDarkMode() {
     try {
         return localStorage.getItem(DARK_MODE_STORAGE_KEY) === "true";
@@ -46,6 +47,7 @@ const uiSlice = createSlice({
     }
 });
 
+/** Persists dark-mode changes outside Redux because the preference must survive reloads. */
 function persistDarkMode(value) {
     try {
         localStorage.setItem(DARK_MODE_STORAGE_KEY, String(value));
@@ -54,5 +56,7 @@ function persistDarkMode(value) {
 }
 
 export const {toggleDarkMode, setDarkMode, setLanguage} = uiSlice.actions;
+export const selectDarkMode = (state) => state.ui.darkMode;
+export const selectCurrentLanguage = (state) => state.ui.language;
 
 export default uiSlice.reducer;

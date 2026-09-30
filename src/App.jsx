@@ -7,7 +7,7 @@ import AppRouter from "./routes/AppRouter";
 import InstallGate from "./pages/InstallGate";
 import {useDarkMode} from "./hooks/useDarkMode";
 import {useIsStandalone} from "./hooks/useIsStandalone";
-import {lockSession} from "./store/slices/authSlice";
+import {lockSession, selectIsUnlocked} from "./store/slices/authSlice";
 
 
 const AUTO_LOCK_HIDDEN_MS = 2 * 60 * 1000;
@@ -19,7 +19,7 @@ export default function App() {
     const darkMode = useDarkMode();
     const isStandalone = useIsStandalone();
 
-    const isUnlocked = useSelector((state) => state.auth.isUnlocked);
+    const isUnlocked = useSelector(selectIsUnlocked);
 
 
     useEffect(() => {

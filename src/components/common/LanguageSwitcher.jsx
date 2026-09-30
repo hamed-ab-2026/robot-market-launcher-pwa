@@ -2,7 +2,7 @@ import React from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {Dropdown} from "antd";
 import {GlobalOutlined} from "@ant-design/icons";
-import {setLanguage} from "../../store/slices/uiSlice";
+import {selectCurrentLanguage, setLanguage} from "../../store/slices/uiSlice";
 import {SUPPORTED_LANGUAGES} from "../../i18n";
 
 
@@ -11,7 +11,7 @@ const LANGUAGE_LABELS = {fa: "فارسی", en: "English"};
 
 export default function LanguageSwitcher() {
     const dispatch = useDispatch();
-    const currentLanguage = useSelector((state) => state.ui.language);
+    const currentLanguage = useSelector(selectCurrentLanguage);
 
     const items = SUPPORTED_LANGUAGES.map((lng) => ({
         key: lng,

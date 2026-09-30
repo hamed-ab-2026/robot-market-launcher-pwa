@@ -1,6 +1,7 @@
 import React, {lazy, Suspense, useState, useEffect} from "react";
 import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import {useSelector} from "react-redux";
+import {selectIsUnlocked} from "../store/slices/authSlice";
 
 const SplashScreen = lazy(() => import("../pages/SplashScreen"));
 const AuthPage = lazy(() => import("../pages/AuthPage"));
@@ -11,7 +12,7 @@ const SPLASH_DURATION_MS = 5000;
 
 
 function RequireUnlock({children}) {
-    const isUnlocked = useSelector((state) => state.auth.isUnlocked);
+    const isUnlocked = useSelector(selectIsUnlocked);
     const location = useLocation();
 
     if (!isUnlocked) {

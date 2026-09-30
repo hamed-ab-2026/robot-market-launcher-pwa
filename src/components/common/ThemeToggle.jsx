@@ -1,14 +1,14 @@
 import React from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {SunOutlined, MoonOutlined} from "@ant-design/icons";
-import {toggleDarkMode} from "../../store/slices/uiSlice";
+import {selectDarkMode, toggleDarkMode} from "../../store/slices/uiSlice";
 import {useTranslation} from "react-i18next";
 
 
 export default function ThemeToggle() {
     const dispatch = useDispatch();
     const {t} = useTranslation();
-    const darkMode = useSelector((state) => state.ui.darkMode);
+    const darkMode = useSelector(selectDarkMode);
 
     return (
         <button

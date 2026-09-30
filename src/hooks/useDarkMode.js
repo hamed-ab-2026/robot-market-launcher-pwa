@@ -1,9 +1,10 @@
 import {useEffect} from "react";
 import {useSelector} from "react-redux";
+import {selectDarkMode} from "../store/slices/uiSlice";
 
 
 export function useDarkMode() {
-    const darkMode = useSelector((state) => state.ui.darkMode);
+    const darkMode = useSelector(selectDarkMode);
 
     useEffect(() => {
         const root = document.documentElement;
